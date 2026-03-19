@@ -47,13 +47,19 @@ public:
   void setUserLimit(size_t limit);
 
   // method for member, operator, and invitations.
+  void addMember(Client &client);
   void addMember(Client *client);
+  void removeMember(const Client &client);
   void removeMember(int fd);
+  bool hasMember(const Client &client) const;
   bool hasMember(int fd) const;
   size_t getMemberCount() const;
 
+  void addOperator(const Client &client);
   void addOperator(int fd);
+  void removeOperator(const Client &client);
   void removeOperator(int fd);
+  bool isOperator(const Client &client) const;
   bool isOperator(int fd) const;
 
   void addInvite(const std::string &nickName);
