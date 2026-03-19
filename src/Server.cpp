@@ -136,6 +136,25 @@ void Server::_processActiveConnections() {
   for (size_t i = 0; i < _pollFds.size(); ++i) {
     if (_pollFds[i].revents == 0)
       continue;
+
+    if (_pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+      if (_pollFds[i].fd == _serverFd) {
+        throw std::runtime_error("Fatal error on server socket.");
+      } else {
+        std::cout << "[!] Socket error or hangup detected. Fd: "
+                  << _pollFds[i].fd << std::endl;
+        std::string quitMsg = ":" + _clients[_pollFds[i].fd]->generatePrefix() +
+                              " QUIT :Connection closed (Error/Hangup)";
+        _removeClientFromAllChannels(_pollFds[i].fd, quitMsg);
+
+        delete _clients[_pollFds[i].fd];
+        _clients.erase(_pollFds[i].fd);
+        _pollFds.erase(_pollFds.begin() + i);
+        --i;
+        continue;
+      }
+    }
+
     if (_pollFds[i].revents & POLLIN) {
       if (_pollFds[i].fd == _serverFd) {
         _acceptNewConnection();
