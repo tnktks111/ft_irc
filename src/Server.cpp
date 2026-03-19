@@ -356,6 +356,25 @@ void Server::_handleJoin(Client *client, const Message &msg) {
     }
   }
 
+  if (!isNewChannel && channel->getPassword().empty()) {
+    std::string providedKey =
+        (msg.getParams().size() > 1) ? msg.getParams()[1] : "";
+
+    if (providedKey != channel->getPassword()) {
+      _sendMessage(client->getFd(), "475 " + client->getNickName() + " " +
+                                        chName + " :Cannot join channel (+k)");
+      return;
+    }
+  }
+
+  if (!isNewChannel && channel->getUserLimit() > 0) {
+    if (channel->getMemberCount() >= channel->getUserLimit()) {
+      _sendMessage(client->getFd(), "471 " + client->getNickName() + " " +
+                                        chName + " :Cannot join channel (+l)");
+      return;
+    }
+  }
+
   if (!channel->hasMember(client->getFd())) {
     channel->addMember(client);
 
