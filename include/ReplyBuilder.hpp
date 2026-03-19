@@ -31,8 +31,8 @@ public:
                                  const std::string &namesList);
   static std::string rplEndOfNames(const std::string &clientName,
                                    const std::string &channelName);
-  static std::string errNoSuchNickChannel(const std::string &clientName,
-                                          const std::string &target);
+  static std::string errNoSuchNick(const std::string &clientName,
+                                   const std::string &target);
   static std::string errNoSuchChannel(const std::string &clientName,
                                       const std::string &channelName);
   static std::string errNoOrigin(const std::string &clientName);

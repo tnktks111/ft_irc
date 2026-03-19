@@ -509,8 +509,8 @@ void Server::_handlePrivMsg(Client *client, const Message &msg) {
                                           client->getNickName(), target));
       }
     } else {
-      _sendMessage(client->getFd(), ReplyBuilder::errNoSuchNickChannel(
-                                        client->getNickName(), target));
+      _sendMessage(client->getFd(),
+                   ReplyBuilder::errNoSuchNick(client->getNickName(), target));
     }
   } else {
     for (std::map<int, Client *>::iterator it = _clients.begin();
@@ -520,8 +520,8 @@ void Server::_handlePrivMsg(Client *client, const Message &msg) {
         return;
       }
     }
-    _sendMessage(client->getFd(), ReplyBuilder::errNoSuchNickChannel(
-                                      client->getNickName(), target));
+    _sendMessage(client->getFd(),
+                 ReplyBuilder::errNoSuchNick(client->getNickName(), target));
   }
 }
 
@@ -694,7 +694,7 @@ void Server::_handleKick(Client *client, const Message &msg) {
 
   Client *targetClient = _getClientByNickname(targetNick);
   if (targetClient == NULL) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNoSuchNickChannel(
+    _sendMessage(client->getFd(), ReplyBuilder::errNoSuchNick(
                                       client->getNickName(), targetNick));
     return;
   }
@@ -733,7 +733,7 @@ void Server::_handleInvite(Client *client, const Message &msg) {
 
   Client *targetClient = _getClientByNickname(targetNick);
   if (targetClient == NULL) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNoSuchNickChannel(
+    _sendMessage(client->getFd(), ReplyBuilder::errNoSuchNick(
                                       client->getNickName(), targetNick));
     return;
   }
