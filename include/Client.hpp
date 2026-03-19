@@ -45,7 +45,7 @@ public:
   void setPassChecked(bool status);
   void setRegistered(bool status);
 
-  std::string generatePrefix() const;
+  std::string getPrefix() const;
 };
 
 #endif
