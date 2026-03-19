@@ -375,7 +375,7 @@ void Server::_handleJoin(Client *client, const Message &msg) {
     }
   }
 
-  if (!isNewChannel && channel->getPassword().empty()) {
+  if (!isNewChannel && !channel->getPassword().empty()) {
     std::string providedKey =
         (msg.getParams().size() > 1) ? msg.getParams()[1] : "";
 
