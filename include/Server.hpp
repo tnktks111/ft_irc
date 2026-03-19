@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+class CommandContext;
+
 class Server {
 private:
   int _port;
@@ -36,25 +38,25 @@ private:
   // Commands
   // 1. configulation commands
   bool _executeCommand(Client *client, const Message &msg);
-  void _handlePass(Client *client, const Message &msg);
-  void _handleNick(Client *client, const Message &msg);
-  void _handleUser(Client *client, const Message &msg);
+  void _handlePass(CommandContext &ctx);
+  void _handleNick(CommandContext &ctx);
+  void _handleUser(CommandContext &ctx);
 
   void _checkRegistration(Client *client);
 
   // 2. channel commands
   static std::string _generateChannelMemberStr(const Channel *channel);
-  void _handleJoin(Client *client, const Message &msg);
-  void _handlePrivMsg(Client *client, const Message &msg);
-  void _handlePart(Client *client, const Message &msg);
-  void _handleQuit(Client *client, const Message &msg);
+  void _handleJoin(CommandContext &ctx);
+  void _handlePrivMsg(CommandContext &ctx);
+  void _handlePart(CommandContext &ctx);
+  void _handleQuit(CommandContext &ctx);
+  void _removeClientFromAllChannels(Client &client, const std::string &quitMsg);
   void _removeClientFromAllChannels(int fd, const std::string &quitMsg);
-  void _handleTopic(Client *client, const Message &msg);
-  void _handleKick(Client *client, const Message &msg);
-  Client *_getClientByNickname(const std::string &nickname);
-  void _handleInvite(Client *client, const Message &msg);
-  void _handleMode(Client *client, const Message &msg);
-  void _handlePing(Client *client, const Message &msg);
+  void _handleTopic(CommandContext &ctx);
+  void _handleKick(CommandContext &ctx);
+  void _handleInvite(CommandContext &ctx);
+  void _handleMode(CommandContext &ctx);
+  void _handlePing(CommandContext &ctx);
 
 public:
   Server(int port, const std::string &password);

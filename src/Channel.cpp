@@ -35,8 +35,14 @@ void Channel::setUserLimit(size_t limit) { _userLimit = limit; }
 
 size_t Channel::getMemberCount() const { return _members.size(); }
 
+void Channel::addMember(Client &client) { addMember(&client); }
+
 void Channel::addMember(Client *client) {
   _members.insert(std::make_pair(client->getFd(), client));
+}
+
+void Channel::removeMember(const Client &client) {
+  removeMember(client.getFd());
 }
 
 void Channel::removeMember(int fd) {
@@ -44,14 +50,24 @@ void Channel::removeMember(int fd) {
   removeOperator(fd);
 }
 
+bool Channel::hasMember(const Client &client) const {
+  return hasMember(client.getFd());
+}
+
 bool Channel::hasMember(int fd) const {
   return _members.find(fd) != _members.end();
 }
+
+void Channel::addOperator(const Client &client) { addOperator(client.getFd()); }
 
 void Channel::addOperator(int fd) {
   if (!isOperator(fd)) {
     _operators.push_back(fd);
   }
+}
+
+void Channel::removeOperator(const Client &client) {
+  removeOperator(client.getFd());
 }
 
 void Channel::removeOperator(int fd) {
@@ -60,6 +76,10 @@ void Channel::removeOperator(int fd) {
   if (it != _operators.end()) {
     _operators.erase(it);
   }
+}
+
+bool Channel::isOperator(const Client &client) const {
+  return isOperator(client.getFd());
 }
 
 bool Channel::isOperator(int fd) const {
