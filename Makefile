@@ -9,7 +9,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 
 INCLUDES = -I $(INC_DIR)
 
-BASENAMES = main Channel Client Message ReplyBuilder Server 
+BASENAMES = main Channel Client Message ReplyBuilder ResponseSink Server 
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(BASENAMES)))
 OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(BASENAMES)))
