@@ -46,6 +46,6 @@ void Client::setUserName(const std::string &userName) { _userName = userName; }
 void Client::setPassChecked(bool status) { _isPassChecked = status; }
 void Client::setRegistered(bool status) { _isRegistered = status; }
 
-std::string Client::generatePrefix() const {
+std::string Client::getPrefix() const {
   return _nickName + "!" + _userName + "@localhost";
 }
