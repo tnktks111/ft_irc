@@ -37,6 +37,7 @@ public:
   const std::string &getUserName() const;
   bool isPassChecked() const;
   bool isRegistered() const;
+  std::string getMembersString() const;
 
   // Setter
   void setNickName(const std::string &nickName);

@@ -42,6 +42,7 @@ private:
   void _checkRegistration(Client *client);
 
   // 2. channel commands
+  static std::string _generateChannelMemberStr(const Channel *channel);
   void _handleJoin(Client *client, const Message &msg);
   void _handlePrivMsg(Client *client, const Message &msg);
   void _handlePart(Client *client, const Message &msg);

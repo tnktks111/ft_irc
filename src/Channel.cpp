@@ -13,6 +13,8 @@ const std::string &Channel::getTopic() const { return _topic; }
 
 void Channel::setTopic(const std::string &topic) { _topic = topic; }
 
+const std::map<int, Client *> &Channel::getMembers() const { return _members; }
+
 // flag getter
 bool Channel::isInviteOnly() const { return _inviteOnly; }
 

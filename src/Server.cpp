@@ -388,6 +388,25 @@ void Server::_checkRegistration(Client *client) {
   }
 }
 
+std::string Server::_generateChannelMemberStr(const Channel *channel) {
+  std::string namesList;
+
+  const std::map<int, Client *> &members = channel->getMembers();
+  for (std::map<int, Client *>::const_iterator it = members.begin();
+       it != members.end(); ++it) {
+    Client *member = it->second;
+    if (!namesList.empty())
+      namesList += " ";
+
+    if (channel->isOperator(it->first))
+      namesList += "@";
+
+    namesList += member->getNickName();
+  }
+
+  return namesList;
+}
+
 // JOIN <channel>
 void Server::_handleJoin(Client *client, const Message &msg) {
   if (msg.getParams().empty()) {
@@ -443,12 +462,25 @@ void Server::_handleJoin(Client *client, const Message &msg) {
                 << chName << std::endl;
     }
 
+    channel->removeInvite(client->getNickName());
+
     std::string joinMsg = ":" + client->generatePrefix() + " JOIN :" + chName;
     _sendMessage(client->getFd(), joinMsg);
     channel->broadcastMessage(joinMsg, client->getFd());
 
-    // TODO: 入室に成功したらremoveInviteで招待リストから消す
-    // TODO: 部屋のトピック、参加者一覧を返す
+    if (!channel->getTopic().empty()) {
+      _sendMessage(client->getFd(), "332 " + client->getNickName() + " " +
+                                        chName + " :" + channel->getTopic());
+    } else {
+      _sendMessage(client->getFd(), "331 " + client->getNickName() + " " +
+                                        chName + " :No topic is set");
+    }
+
+    std::string namesList = _generateChannelMemberStr(channel);
+    _sendMessage(client->getFd(), "353 " + client->getNickName() + " = " +
+                                      chName + " :" + namesList);
+    _sendMessage(client->getFd(), "366 " + client->getNickName() + " " +
+                                      chName + " :End of /NAMES list.");
   }
 }
 
