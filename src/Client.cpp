@@ -21,7 +21,10 @@ std::string Client::extractMessage() {
     return "";
 
   std::string msg = _recvBuffer.substr(0, pos);
-  _recvBuffer.erase(0, pos + 2);
+
+  _recvBuffer.erase(0, pos + 1);
+  // 個々も戻すうおうおうおう
+  // _recvBuffer.erase(0, pos + 2);
 
   return msg;
 }
