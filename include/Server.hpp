@@ -29,11 +29,11 @@ private:
   void _processActiveConnections();
   void _acceptNewConnection();
   ConnectionStatus _handleClientMessage(struct pollfd &clientPollFd);
+  void _sendMessage(int fd, const std::string &msg);
+  void _updatePollEvents();
 
   // Commands
   // 1. configulation commands
-  void _sendMessage(int fd, const std::string &msg);
-
   bool _executeCommand(Client *client, const Message &msg);
   void _handlePass(Client *client, const Message &msg);
   void _handleNick(Client *client, const Message &msg);
@@ -42,6 +42,7 @@ private:
   void _checkRegistration(Client *client);
 
   // 2. channel commands
+  static std::string _generateChannelMemberStr(const Channel *channel);
   void _handleJoin(Client *client, const Message &msg);
   void _handlePrivMsg(Client *client, const Message &msg);
   void _handlePart(Client *client, const Message &msg);

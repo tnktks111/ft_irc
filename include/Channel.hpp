@@ -32,6 +32,7 @@ public:
   const std::string &getName() const;
   const std::string &getTopic() const;
   void setTopic(const std::string &topic);
+  const std::map<int, Client*> &getMembers() const;
 
   // flag getter
   bool isInviteOnly() const;

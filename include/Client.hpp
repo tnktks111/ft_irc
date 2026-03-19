@@ -27,11 +27,17 @@ public:
   void appendRecvBuffer(const std::string &data);
   std::string extractMessage();
 
+  // sendBuffer
+  void appendSendBuffer(const std::string &msg);
+  std::string &getSendBuffer();
+  void eraseSendBuffer(size_t length);
+
   // Getter
   const std::string &getNickName() const;
   const std::string &getUserName() const;
   bool isPassChecked() const;
   bool isRegistered() const;
+  std::string getMembersString() const;
 
   // Setter
   void setNickName(const std::string &nickName);

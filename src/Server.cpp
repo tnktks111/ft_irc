@@ -136,6 +136,25 @@ void Server::_processActiveConnections() {
   for (size_t i = 0; i < _pollFds.size(); ++i) {
     if (_pollFds[i].revents == 0)
       continue;
+
+    if (_pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+      if (_pollFds[i].fd == _serverFd) {
+        throw std::runtime_error("Fatal error on server socket.");
+      } else {
+        std::cout << "[!] Socket error or hangup detected. Fd: "
+                  << _pollFds[i].fd << std::endl;
+        std::string quitMsg = ":" + _clients[_pollFds[i].fd]->generatePrefix() +
+                              " QUIT :Connection closed (Error/Hangup)";
+        _removeClientFromAllChannels(_pollFds[i].fd, quitMsg);
+
+        delete _clients[_pollFds[i].fd];
+        _clients.erase(_pollFds[i].fd);
+        _pollFds.erase(_pollFds.begin() + i);
+        --i;
+        continue;
+      }
+    }
+
     if (_pollFds[i].revents & POLLIN) {
       if (_pollFds[i].fd == _serverFd) {
         _acceptNewConnection();
@@ -151,6 +170,30 @@ void Server::_processActiveConnections() {
           _pollFds.erase(_pollFds.begin() + i);
           --i;
         };
+      }
+    }
+
+    if (_pollFds[i].revents & POLLOUT) {
+      if (_pollFds[i].fd != _serverFd) {
+        Client *client = _clients[_pollFds[i].fd];
+        std::string &sendBuf = client->getSendBuffer();
+
+        if (!sendBuf.empty()) {
+          int bytesSent =
+              send(_pollFds[i].fd, sendBuf.c_str(), sendBuf.length(), 0);
+          if (bytesSent > 0) {
+            client->eraseSendBuffer(bytesSent);
+          } else if (bytesSent == -1) {
+            if (errno != EAGAIN && errno != EWOULDBLOCK) {
+              std::cerr << "Error: send() failed on Fd " << _pollFds[i].fd
+                        << std::endl;
+            }
+          }
+        }
+
+        if (client->getSendBuffer().empty()) {
+          _pollFds[i].events &= ~POLLOUT;
+        }
       }
     }
   }
@@ -214,8 +257,24 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
 
 void Server::_sendMessage(int fd, const std::string &msg) {
   std::string fullMsg = msg + "\r\n";
-  send(fd, fullMsg.c_str(), fullMsg.length(), 0);
-  std::cout << "[Send to Fd: " << fd << "] " << msg << std::endl;
+  if (_clients.find(fd) != _clients.end()) {
+    _clients[fd]->appendSendBuffer(fullMsg);
+    std::cout << "[Queued for Fd: " << fd << "] " << msg << std::endl;
+  }
+}
+
+void Server::_updatePollEvents() {
+  for (size_t i = 0; i < _pollFds.size(); ++i) {
+    int fd = _pollFds[i].fd;
+    if (fd == _serverFd)
+      continue;
+    if (_clients.find(fd) != _clients.end()) {
+      if (!_clients[fd]->getSendBuffer().empty())
+        _pollFds[i].events |= POLLOUT;
+      else
+        _pollFds[i].events &= ~POLLOUT;
+    }
+  }
 }
 
 bool Server::_executeCommand(Client *client, const Message &msg) {
@@ -329,6 +388,25 @@ void Server::_checkRegistration(Client *client) {
   }
 }
 
+std::string Server::_generateChannelMemberStr(const Channel *channel) {
+  std::string namesList;
+
+  const std::map<int, Client *> &members = channel->getMembers();
+  for (std::map<int, Client *>::const_iterator it = members.begin();
+       it != members.end(); ++it) {
+    Client *member = it->second;
+    if (!namesList.empty())
+      namesList += " ";
+
+    if (channel->isOperator(it->first))
+      namesList += "@";
+
+    namesList += member->getNickName();
+  }
+
+  return namesList;
+}
+
 // JOIN <channel>
 void Server::_handleJoin(Client *client, const Message &msg) {
   if (msg.getParams().empty()) {
@@ -356,6 +434,25 @@ void Server::_handleJoin(Client *client, const Message &msg) {
     }
   }
 
+  if (!isNewChannel && !channel->getPassword().empty()) {
+    std::string providedKey =
+        (msg.getParams().size() > 1) ? msg.getParams()[1] : "";
+
+    if (providedKey != channel->getPassword()) {
+      _sendMessage(client->getFd(), "475 " + client->getNickName() + " " +
+                                        chName + " :Cannot join channel (+k)");
+      return;
+    }
+  }
+
+  if (!isNewChannel && channel->getUserLimit() > 0) {
+    if (channel->getMemberCount() >= channel->getUserLimit()) {
+      _sendMessage(client->getFd(), "471 " + client->getNickName() + " " +
+                                        chName + " :Cannot join channel (+l)");
+      return;
+    }
+  }
+
   if (!channel->hasMember(client->getFd())) {
     channel->addMember(client);
 
@@ -365,12 +462,25 @@ void Server::_handleJoin(Client *client, const Message &msg) {
                 << chName << std::endl;
     }
 
+    channel->removeInvite(client->getNickName());
+
     std::string joinMsg = ":" + client->generatePrefix() + " JOIN :" + chName;
     _sendMessage(client->getFd(), joinMsg);
     channel->broadcastMessage(joinMsg, client->getFd());
 
-    // TODO: 入室に成功したらremoveInviteで招待リストから消す
-    // TODO: 部屋のトピック、参加者一覧を返す
+    if (!channel->getTopic().empty()) {
+      _sendMessage(client->getFd(), "332 " + client->getNickName() + " " +
+                                        chName + " :" + channel->getTopic());
+    } else {
+      _sendMessage(client->getFd(), "331 " + client->getNickName() + " " +
+                                        chName + " :No topic is set");
+    }
+
+    std::string namesList = _generateChannelMemberStr(channel);
+    _sendMessage(client->getFd(), "353 " + client->getNickName() + " = " +
+                                      chName + " :" + namesList);
+    _sendMessage(client->getFd(), "366 " + client->getNickName() + " " +
+                                      chName + " :End of /NAMES list.");
   }
 }
 
@@ -852,7 +962,7 @@ void Server::_handlePing(Client *client, const Message &msg) {
   }
 
   std::string token = msg.getParams()[0];
-  _sendMessage(client->getFd(), "PONG" + token);
+  _sendMessage(client->getFd(), "PONG " + token);
 }
 
 void Server::start() {
@@ -861,6 +971,7 @@ void Server::start() {
   std::cout << "Server is running on port " << _port << "..." << std::endl;
 
   while (true) {
+    _updatePollEvents();
     _waitForEvents();
     _processActiveConnections();
   }
