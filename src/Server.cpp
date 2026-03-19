@@ -852,7 +852,7 @@ void Server::_handlePing(Client *client, const Message &msg) {
   }
 
   std::string token = msg.getParams()[0];
-  _sendMessage(client->getFd(), "PONG" + token);
+  _sendMessage(client->getFd(), "PONG " + token);
 }
 
 void Server::start() {
