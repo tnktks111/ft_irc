@@ -46,8 +46,8 @@ std::string ReplyBuilder::rplEndOfNames(const std::string &clientName,
   return "366 " + clientName + " " + channelName + " :End of /NAMES list";
 }
 
-std::string ReplyBuilder::errNoSuchNickChannel(const std::string &clientName,
-                                               const std::string &target) {
+std::string ReplyBuilder::errNoSuchNick(const std::string &clientName,
+                                        const std::string &target) {
   return "401 " + clientName + " " + target + " :No such nick/channel";
 }
 
