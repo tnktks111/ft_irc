@@ -74,7 +74,7 @@ void Channel::addInvite(const std::string &nickName) {
 
 bool Channel::isInvited(const std::string &nickName) const {
   return std::find(_invitedUserNicks.begin(), _invitedUserNicks.end(),
-                   nickName) == _invitedUserNicks.end();
+                   nickName) != _invitedUserNicks.end();
 }
 
 void Channel::removeInvite(const std::string &nickName) {
