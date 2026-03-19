@@ -1,6 +1,5 @@
 #include "../include/Channel.hpp"
 #include <algorithm>
-#include <sys/socket.h>
 
 Channel::Channel(const std::string &name)
     : _name(name), _topic(""), _inviteOnly(false), _topicProtected(true),
@@ -90,7 +89,7 @@ void Channel::broadcastMessage(const std::string &msg, int excludeFd) {
   for (std::map<int, Client *>::iterator it = _members.begin();
        it != _members.end(); ++it) {
     if (it->first != excludeFd) {
-      send(it->first, fullMsg.c_str(), fullMsg.length(), 0);
+      it->second->appendSendBuffer(fullMsg);
     }
   }
 }

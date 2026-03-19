@@ -23,11 +23,16 @@ std::string Client::extractMessage() {
   std::string msg = _recvBuffer.substr(0, pos);
 
   _recvBuffer.erase(0, pos + 1);
-  // 個々も戻すうおうおうおう
+  // ここも戻すうおうおうおう
   // _recvBuffer.erase(0, pos + 2);
 
   return msg;
 }
+
+// sendBuffer
+void Client::appendSendBuffer(const std::string &msg) { _sendBuffer += msg; }
+std::string &Client::getSendBuffer() { return _sendBuffer; }
+void Client::eraseSendBuffer(size_t length) { _sendBuffer.erase(0, length); }
 
 // Getter
 const std::string &Client::getNickName() const { return _nickName; }

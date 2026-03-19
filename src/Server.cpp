@@ -172,6 +172,30 @@ void Server::_processActiveConnections() {
         };
       }
     }
+
+    if (_pollFds[i].revents & POLLOUT) {
+      if (_pollFds[i].fd != _serverFd) {
+        Client *client = _clients[_pollFds[i].fd];
+        std::string &sendBuf = client->getSendBuffer();
+
+        if (!sendBuf.empty()) {
+          int bytesSent =
+              send(_pollFds[i].fd, sendBuf.c_str(), sendBuf.length(), 0);
+          if (bytesSent > 0) {
+            client->eraseSendBuffer(bytesSent);
+          } else if (bytesSent == -1) {
+            if (errno != EAGAIN && errno != EWOULDBLOCK) {
+              std::cerr << "Error: send() failed on Fd " << _pollFds[i].fd
+                        << std::endl;
+            }
+          }
+        }
+
+        if (client->getSendBuffer().empty()) {
+          _pollFds[i].events &= ~POLLOUT;
+        }
+      }
+    }
   }
 }
 
@@ -233,8 +257,24 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
 
 void Server::_sendMessage(int fd, const std::string &msg) {
   std::string fullMsg = msg + "\r\n";
-  send(fd, fullMsg.c_str(), fullMsg.length(), 0);
-  std::cout << "[Send to Fd: " << fd << "] " << msg << std::endl;
+  if (_clients.find(fd) != _clients.end()) {
+    _clients[fd]->appendSendBuffer(fullMsg);
+    std::cout << "[Queued for Fd: " << fd << "] " << msg << std::endl;
+  }
+}
+
+void Server::_updatePollEvents() {
+  for (size_t i = 0; i < _pollFds.size(); ++i) {
+    int fd = _pollFds[i].fd;
+    if (fd == _serverFd)
+      continue;
+    if (_clients.find(fd) != _clients.end()) {
+      if (!_clients[fd]->getSendBuffer().empty())
+        _pollFds[i].events |= POLLOUT;
+      else
+        _pollFds[i].events &= ~POLLOUT;
+    }
+  }
 }
 
 bool Server::_executeCommand(Client *client, const Message &msg) {
@@ -899,6 +939,7 @@ void Server::start() {
   std::cout << "Server is running on port " << _port << "..." << std::endl;
 
   while (true) {
+    _updatePollEvents();
     _waitForEvents();
     _processActiveConnections();
   }
