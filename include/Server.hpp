@@ -4,6 +4,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Message.hpp"
+#include "ResponseSink.hpp"
 #include <map>
 #include <poll.h>
 #include <string>
@@ -17,6 +18,7 @@ private:
   std::vector<struct pollfd> _pollFds;
   std::map<int, Client *> _clients;
   std::map<std::string, Channel *> _channels;
+  ResponseSink _responseSink;
 
   enum ConnectionStatus { KEEP_ALIVE, DISCONNECT };
 
@@ -29,7 +31,6 @@ private:
   void _processActiveConnections();
   void _acceptNewConnection();
   ConnectionStatus _handleClientMessage(struct pollfd &clientPollFd);
-  void _sendMessage(int fd, const std::string &msg);
   void _updatePollEvents();
 
   // Commands

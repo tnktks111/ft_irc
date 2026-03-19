@@ -255,14 +255,6 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
   }
 }
 
-void Server::_sendMessage(int fd, const std::string &msg) {
-  std::string fullMsg = msg + "\r\n";
-  if (_clients.find(fd) != _clients.end()) {
-    _clients[fd]->appendSendBuffer(fullMsg);
-    std::cout << "[Queued for Fd: " << fd << "] " << msg << std::endl;
-  }
-}
-
 void Server::_updatePollEvents() {
   for (size_t i = 0; i < _pollFds.size(); ++i) {
     int fd = _pollFds[i].fd;
@@ -290,7 +282,7 @@ bool Server::_executeCommand(Client *client, const Message &msg) {
     _handleUser(client, msg);
   } else {
     if (!client->isRegistered()) {
-      _sendMessage(client->getFd(), ReplyBuilder::errNotRegistered());
+      _responseSink.reply(*client, ReplyBuilder::errNotRegistered());
     } else {
       if (cmd == "JOIN") {
         _handleJoin(client, msg);
@@ -319,26 +311,26 @@ bool Server::_executeCommand(Client *client, const Message &msg) {
 // PASS <password>
 void Server::_handlePass(Client *client, const Message &msg) {
   if (client->isRegistered()) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errAlreadyRegistered(client->getNickName()));
+    _responseSink.reply(
+        *client, ReplyBuilder::errAlreadyRegistered(client->getNickName()));
     return;
   }
   if (msg.getParams().empty()) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams("*", "PASS"));
+    _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams("*", "PASS"));
     return;
   }
 
   if (msg.getParams()[0] == _password) {
     client->setPassChecked(true);
   } else {
-    _sendMessage(client->getFd(), ReplyBuilder::errIncorrectPassword());
+    _responseSink.reply(*client, ReplyBuilder::errIncorrectPassword());
   }
 }
 
 // NICK <nickname>
 void Server::_handleNick(Client *client, const Message &msg) {
   if (msg.getParams().empty()) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNoNicknameGiven());
+    _responseSink.reply(*client, ReplyBuilder::errNoNicknameGiven());
     return;
   }
   std::string newNick = msg.getParams()[0];
@@ -346,7 +338,7 @@ void Server::_handleNick(Client *client, const Message &msg) {
   for (std::map<int, Client *>::iterator it = _clients.begin();
        it != _clients.end(); ++it) {
     if (it->first != client->getFd() && it->second->getNickName() == newNick) {
-      _sendMessage(client->getFd(), ReplyBuilder::errNickNameInUse(newNick));
+      _responseSink.reply(*client, ReplyBuilder::errNickNameInUse(newNick));
       return;
     }
   }
@@ -358,12 +350,12 @@ void Server::_handleNick(Client *client, const Message &msg) {
 // USER <username> <hostname> <servername> <realname>
 void Server::_handleUser(Client *client, const Message &msg) {
   if (client->isRegistered()) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errAlreadyRegistered(client->getNickName()));
+    _responseSink.reply(
+        *client, ReplyBuilder::errAlreadyRegistered(client->getNickName()));
     return;
   }
   if (msg.getParams().size() < 4) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams("*", "USER"));
+    _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams("*", "USER"));
     return;
   }
 
@@ -379,9 +371,8 @@ void Server::_checkRegistration(Client *client) {
       !client->getUserName().empty()) {
     client->setRegistered(true);
 
-    _sendMessage(
-        client->getFd(),
-        ReplyBuilder::rplWelcome(client->getNickName(), client->getPrefix()));
+    _responseSink.reply(*client, ReplyBuilder::rplWelcome(client->getNickName(),
+                                                          client->getPrefix()));
 
     std::cout << "[+] Client(FD: " << client->getFd()
               << ") has successfully logged in." << std::endl;
@@ -410,8 +401,8 @@ std::string Server::_generateChannelMemberStr(const Channel *channel) {
 // JOIN <channel>
 void Server::_handleJoin(Client *client, const Message &msg) {
   if (msg.getParams().empty()) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams(
-                                      client->getNickName(), "JOIN"));
+    _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams(
+                                     client->getNickName(), "JOIN"));
     return;
   }
 
@@ -428,8 +419,8 @@ void Server::_handleJoin(Client *client, const Message &msg) {
 
   if (!isNewChannel && channel->isInviteOnly()) {
     if (!channel->isInvited(client->getNickName())) {
-      _sendMessage(client->getFd(), ReplyBuilder::errInviteOnlyChan(
-                                        client->getNickName(), chName));
+      _responseSink.reply(*client, ReplyBuilder::errInviteOnlyChan(
+                                       client->getNickName(), chName));
       return;
     }
   }
@@ -439,16 +430,16 @@ void Server::_handleJoin(Client *client, const Message &msg) {
         (msg.getParams().size() > 1) ? msg.getParams()[1] : "";
 
     if (providedKey != channel->getPassword()) {
-      _sendMessage(client->getFd(), ReplyBuilder::errBadChannelKey(
-                                        client->getNickName(), chName));
+      _responseSink.reply(*client, ReplyBuilder::errBadChannelKey(
+                                       client->getNickName(), chName));
       return;
     }
   }
 
   if (!isNewChannel && channel->getUserLimit() > 0) {
     if (channel->getMemberCount() >= channel->getUserLimit()) {
-      _sendMessage(client->getFd(), ReplyBuilder::errChannelIsFull(
-                                        client->getNickName(), chName));
+      _responseSink.reply(*client, ReplyBuilder::errChannelIsFull(
+                                       client->getNickName(), chName));
       return;
     }
   }
@@ -465,32 +456,30 @@ void Server::_handleJoin(Client *client, const Message &msg) {
     channel->removeInvite(client->getNickName());
 
     std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + chName;
-    _sendMessage(client->getFd(), joinMsg);
-    channel->broadcastMessage(joinMsg, client->getFd());
+    _responseSink.broadcast(*channel, joinMsg);
 
     if (!channel->getTopic().empty()) {
-      _sendMessage(client->getFd(),
-                   ReplyBuilder::rplTopic(client->getNickName(), chName,
-                                          channel->getTopic()));
+      _responseSink.reply(*client,
+                          ReplyBuilder::rplTopic(client->getNickName(), chName,
+                                                 channel->getTopic()));
     } else {
-      _sendMessage(client->getFd(),
-                   ReplyBuilder::rplNoTopic(client->getNickName(), chName));
+      _responseSink.reply(
+          *client, ReplyBuilder::rplNoTopic(client->getNickName(), chName));
     }
 
     std::string namesList = _generateChannelMemberStr(channel);
-    _sendMessage(
-        client->getFd(),
-        ReplyBuilder::rplNamReply(client->getNickName(), chName, namesList));
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::rplEndOfNames(client->getNickName(), chName));
+    _responseSink.reply(*client, ReplyBuilder::rplNamReply(
+                                     client->getNickName(), chName, namesList));
+    _responseSink.reply(
+        *client, ReplyBuilder::rplEndOfNames(client->getNickName(), chName));
   }
 }
 
 // PRIVMSG <target> <message>
 void Server::_handlePrivMsg(Client *client, const Message &msg) {
   if (msg.getParams().size() < 2) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNoTextToSend(client->getNickName()));
+    _responseSink.reply(*client,
+                        ReplyBuilder::errNoTextToSend(client->getNickName()));
     return;
   }
 
@@ -503,33 +492,33 @@ void Server::_handlePrivMsg(Client *client, const Message &msg) {
     if (_channels.find(target) != _channels.end()) {
       Channel *channel = _channels[target];
       if (channel->hasMember(client->getFd())) {
-        channel->broadcastMessage(fullMsg, client->getFd());
+        _responseSink.broadcastExcept(*channel, fullMsg, *client);
       } else {
-        _sendMessage(client->getFd(), ReplyBuilder::errCantSendToChannel(
-                                          client->getNickName(), target));
+        _responseSink.reply(*client, ReplyBuilder::errCantSendToChannel(
+                                         client->getNickName(), target));
       }
     } else {
-      _sendMessage(client->getFd(),
-                   ReplyBuilder::errNoSuchNick(client->getNickName(), target));
+      _responseSink.reply(
+          *client, ReplyBuilder::errNoSuchNick(client->getNickName(), target));
     }
   } else {
     for (std::map<int, Client *>::iterator it = _clients.begin();
          it != _clients.end(); ++it) {
       if (it->second->getNickName() == target) {
-        _sendMessage(it->second->getFd(), fullMsg);
+        _responseSink.direct(*it->second, fullMsg);
         return;
       }
     }
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNoSuchNick(client->getNickName(), target));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNoSuchNick(client->getNickName(), target));
   }
 }
 
 // PART <channel> *( "," <channel> ) [ <Part Message> ]
 void Server::_handlePart(Client *client, const Message &msg) {
   if (msg.getParams().empty()) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams(
-                                      client->getNickName(), "PART"));
+    _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams(
+                                     client->getNickName(), "PART"));
     return;
   }
 
@@ -538,22 +527,21 @@ void Server::_handlePart(Client *client, const Message &msg) {
       (msg.getParams().size() > 1) ? msg.getParams()[1] : "Leaving";
 
   if (_channels.find(chName) == _channels.end()) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNoSuchChannel(client->getNickName(), chName));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNoSuchChannel(client->getNickName(), chName));
     return;
   }
 
   Channel *channel = _channels[chName];
   if (!channel->hasMember(client->getFd())) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNotOnChannel(client->getNickName(), chName));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNotOnChannel(client->getNickName(), chName));
     return;
   }
 
   std::string fullMsg =
       ":" + client->getPrefix() + " PART " + chName + " :" + partMsg;
-  _sendMessage(client->getFd(), fullMsg);
-  channel->broadcastMessage(fullMsg, client->getFd());
+  _responseSink.broadcast(*channel, fullMsg);
 
   channel->removeMember(client->getFd());
 
@@ -580,7 +568,7 @@ void Server::_removeClientFromAllChannels(int fd, const std::string &quitMsg) {
        it != _channels.end(); ++it) {
     Channel *channel = it->second;
     if (channel->hasMember(fd)) {
-      channel->broadcastMessage(quitMsg, fd);
+      _responseSink.broadcastExcept(*channel, quitMsg, *_clients[fd]);
       channel->removeMember(fd);
 
       if (channel->getMemberCount() == 0) {
@@ -600,35 +588,35 @@ void Server::_removeClientFromAllChannels(int fd, const std::string &quitMsg) {
 // TOPIC <channel> [ <topic> ]
 void Server::_handleTopic(Client *client, const Message &msg) {
   if (msg.getParams().empty()) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams(
-                                      client->getNickName(), "TOPIC"));
+    _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams(
+                                     client->getNickName(), "TOPIC"));
     return;
   }
 
   std::string chName = msg.getParams()[0];
 
   if (_channels.find(chName) == _channels.end()) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNoSuchChannel(client->getNickName(), chName));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNoSuchChannel(client->getNickName(), chName));
     return;
   }
 
   Channel *channel = _channels[chName];
 
   if (!channel->hasMember(client->getFd())) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNotOnChannel(client->getNickName(), chName));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNotOnChannel(client->getNickName(), chName));
     return;
   }
 
   if (msg.getParams().size() == 1) {
     if (channel->getTopic().empty()) {
-      _sendMessage(client->getFd(),
-                   ReplyBuilder::rplNoTopic(client->getNickName(), chName));
+      _responseSink.reply(
+          *client, ReplyBuilder::rplNoTopic(client->getNickName(), chName));
     } else {
-      _sendMessage(client->getFd(),
-                   ReplyBuilder::rplTopic(client->getNickName(), chName,
-                                          channel->getTopic()));
+      _responseSink.reply(*client,
+                          ReplyBuilder::rplTopic(client->getNickName(), chName,
+                                                 channel->getTopic()));
     }
     return;
   }
@@ -636,8 +624,8 @@ void Server::_handleTopic(Client *client, const Message &msg) {
   std::string newTopic = msg.getParams()[1];
 
   if (channel->isTopicProtected() && !channel->isOperator(client->getFd())) {
-    _sendMessage(client->getFd(), ReplyBuilder::errChanOPrivsNeeded(
-                                      client->getNickName(), chName));
+    _responseSink.reply(*client, ReplyBuilder::errChanOPrivsNeeded(
+                                     client->getNickName(), chName));
     return;
   }
 
@@ -645,8 +633,7 @@ void Server::_handleTopic(Client *client, const Message &msg) {
 
   std::string topicMsg =
       ":" + client->getPrefix() + " TOPIC " + chName + " :" + newTopic;
-  _sendMessage(client->getFd(), topicMsg);
-  channel->broadcastMessage(topicMsg, client->getFd());
+  _responseSink.broadcast(*channel, topicMsg);
 }
 
 Client *Server::_getClientByNickname(const std::string &nickname) {
@@ -662,8 +649,8 @@ Client *Server::_getClientByNickname(const std::string &nickname) {
 // KICK <channel> <user> [ <comment> ]
 void Server::_handleKick(Client *client, const Message &msg) {
   if (msg.getParams().size() < 2) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams(
-                                      client->getNickName(), "KICK"));
+    _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams(
+                                     client->getNickName(), "KICK"));
     return;
   }
 
@@ -673,43 +660,42 @@ void Server::_handleKick(Client *client, const Message &msg) {
       (msg.getParams().size() > 2) ? msg.getParams()[2] : "Kicked by operator";
 
   if (_channels.find(chName) == _channels.end()) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNoSuchChannel(client->getNickName(), chName));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNoSuchChannel(client->getNickName(), chName));
     return;
   }
 
   Channel *channel = _channels[chName];
 
   if (!channel->hasMember(client->getFd())) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNotOnChannel(client->getNickName(), chName));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNotOnChannel(client->getNickName(), chName));
     return;
   }
 
   if (!channel->isOperator(client->getFd())) {
-    _sendMessage(client->getFd(), ReplyBuilder::errChanOPrivsNeeded(
-                                      client->getNickName(), chName));
+    _responseSink.reply(*client, ReplyBuilder::errChanOPrivsNeeded(
+                                     client->getNickName(), chName));
     return;
   }
 
   Client *targetClient = _getClientByNickname(targetNick);
   if (targetClient == NULL) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNoSuchNick(
-                                      client->getNickName(), targetNick));
+    _responseSink.reply(*client, ReplyBuilder::errNoSuchNick(
+                                     client->getNickName(), targetNick));
     return;
   }
 
   if (!channel->hasMember(targetClient->getFd())) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errUserNotInChannel(client->getNickName(),
-                                                   targetNick, chName));
+    _responseSink.reply(*client,
+                        ReplyBuilder::errUserNotInChannel(client->getNickName(),
+                                                          targetNick, chName));
     return;
   }
 
   std::string kickMsg = ":" + client->getPrefix() + " KICK " + chName + " " +
                         targetNick + " :" + reason;
-  channel->broadcastMessage(kickMsg, client->getFd());
-  _sendMessage(client->getFd(), kickMsg);
+  _responseSink.broadcast(*channel, kickMsg);
 
   channel->removeMember(targetClient->getFd());
 
@@ -723,8 +709,8 @@ void Server::_handleKick(Client *client, const Message &msg) {
 // INVITE <nickname> <channel>
 void Server::_handleInvite(Client *client, const Message &msg) {
   if (msg.getParams().size() < 2) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams(
-                                      client->getNickName(), "INVITE"));
+    _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams(
+                                     client->getNickName(), "INVITE"));
     return;
   }
 
@@ -733,35 +719,35 @@ void Server::_handleInvite(Client *client, const Message &msg) {
 
   Client *targetClient = _getClientByNickname(targetNick);
   if (targetClient == NULL) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNoSuchNick(
-                                      client->getNickName(), targetNick));
+    _responseSink.reply(*client, ReplyBuilder::errNoSuchNick(
+                                     client->getNickName(), targetNick));
     return;
   }
 
   if (_channels.find(chName) == _channels.end()) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNoSuchChannel(client->getNickName(), chName));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNoSuchChannel(client->getNickName(), chName));
     return;
   }
 
   Channel *channel = _channels[chName];
 
   if (!channel->hasMember(client->getFd())) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNotOnChannel(client->getNickName(), chName));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNotOnChannel(client->getNickName(), chName));
     return;
   }
 
   if (channel->hasMember(targetClient->getFd())) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errUserOnChannel(client->getNickName(),
-                                                targetNick, chName));
+    _responseSink.reply(*client,
+                        ReplyBuilder::errUserOnChannel(client->getNickName(),
+                                                       targetNick, chName));
     return;
   }
 
   if (channel->isInviteOnly() && !channel->isOperator(client->getFd())) {
-    _sendMessage(client->getFd(), ReplyBuilder::errChanOPrivsNeeded(
-                                      client->getNickName(), chName));
+    _responseSink.reply(*client, ReplyBuilder::errChanOPrivsNeeded(
+                                     client->getNickName(), chName));
     return;
   }
 
@@ -769,15 +755,15 @@ void Server::_handleInvite(Client *client, const Message &msg) {
 
   std::string inviteMsg =
       ":" + client->getPrefix() + " INVITE " + targetNick + " :" + chName;
-  _sendMessage(targetClient->getFd(), inviteMsg);
-  _sendMessage(client->getFd(), ReplyBuilder::rplInviting(client->getNickName(),
-                                                          chName, targetNick));
+  _responseSink.direct(*targetClient, inviteMsg);
+  _responseSink.reply(*client, ReplyBuilder::rplInviting(client->getNickName(),
+                                                         chName, targetNick));
 }
 
 void Server::_handleMode(Client *client, const Message &msg) {
   if (msg.getParams().empty()) {
-    _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams(
-                                      client->getNickName(), "MODE"));
+    _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams(
+                                     client->getNickName(), "MODE"));
     return;
   }
 
@@ -787,8 +773,8 @@ void Server::_handleMode(Client *client, const Message &msg) {
     return;
 
   if (_channels.find(target) == _channels.end()) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNoSuchChannel(client->getNickName(), target));
+    _responseSink.reply(
+        *client, ReplyBuilder::errNoSuchChannel(client->getNickName(), target));
     return;
   }
 
@@ -816,15 +802,15 @@ void Server::_handleMode(Client *client, const Message &msg) {
       modeParams += oss.str();
     }
 
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::rplChannelModeIs(client->getNickName(), target,
+    _responseSink.reply(
+        *client, ReplyBuilder::rplChannelModeIs(client->getNickName(), target,
                                                 currentMode, modeParams));
     return;
   }
 
   if (!channel->isOperator(client->getFd())) {
-    _sendMessage(client->getFd(), ReplyBuilder::errChanOPrivsNeeded(
-                                      client->getNickName(), target));
+    _responseSink.reply(*client, ReplyBuilder::errChanOPrivsNeeded(
+                                     client->getNickName(), target));
     return;
   }
 
@@ -864,11 +850,10 @@ void Server::_handleMode(Client *client, const Message &msg) {
         appliedModes += "t";
       }
     } else if (*it == 'k') {
-
       if (isAdding) {
         if (argIdx >= msg.getParams().size()) {
-          _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams(
-                                            client->getNickName(), "MODE"));
+          _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams(
+                                           client->getNickName(), "MODE"));
           break;
         }
         std::string key = msg.getParams()[argIdx++];
@@ -892,8 +877,8 @@ void Server::_handleMode(Client *client, const Message &msg) {
     } else if (*it == 'l') {
       if (isAdding) {
         if (argIdx >= msg.getParams().size()) {
-          _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams(
-                                            client->getNickName(), "MODE"));
+          _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams(
+                                           client->getNickName(), "MODE"));
           break;
         }
         std::string limitStr = msg.getParams()[argIdx++];
@@ -922,8 +907,8 @@ void Server::_handleMode(Client *client, const Message &msg) {
       }
     } else if (*it == 'o') {
       if (argIdx >= msg.getParams().size()) {
-        _sendMessage(client->getFd(), ReplyBuilder::errNeedMoreParams(
-                                          client->getNickName(), "MODE"));
+        _responseSink.reply(*client, ReplyBuilder::errNeedMoreParams(
+                                         client->getNickName(), "MODE"));
         break;
       }
       std::string targetNick = msg.getParams()[argIdx++];
@@ -944,35 +929,32 @@ void Server::_handleMode(Client *client, const Message &msg) {
         appliedModes += "o";
         appliedParams += " " + targetNick;
       } else {
-        _sendMessage(client->getFd(),
-                     ReplyBuilder::errUserNotInChannel(client->getNickName(),
+        _responseSink.reply(
+            *client, ReplyBuilder::errUserNotInChannel(client->getNickName(),
                                                        targetNick, target));
       }
-    }
-
-    else {
-      _sendMessage(client->getFd(), ReplyBuilder::errUnknownMode(
-                                        client->getNickName(), *it, target));
+    } else {
+      _responseSink.reply(*client, ReplyBuilder::errUnknownMode(
+                                       client->getNickName(), *it, target));
     }
   }
 
   if (!appliedModes.empty()) {
     std::string modeMsg = ":" + client->getPrefix() + " MODE " + target + " " +
                           appliedModes + appliedParams;
-    channel->broadcastMessage(modeMsg, client->getFd());
-    _sendMessage(client->getFd(), modeMsg);
+    _responseSink.broadcast(*channel, modeMsg);
   }
 }
 
 void Server::_handlePing(Client *client, const Message &msg) {
   if (msg.getParams().empty()) {
-    _sendMessage(client->getFd(),
-                 ReplyBuilder::errNoOrigin(client->getNickName()));
+    _responseSink.reply(*client,
+                        ReplyBuilder::errNoOrigin(client->getNickName()));
     return;
   }
 
   std::string token = msg.getParams()[0];
-  _sendMessage(client->getFd(), "PONG " + token);
+  _responseSink.reply(*client, "PONG " + token);
 }
 
 void Server::start() {
