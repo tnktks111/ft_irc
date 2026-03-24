@@ -37,6 +37,9 @@ public:
   bool hasChannel(const std::string &name) const;
   ChannelSlot getOrCreateChannel(const std::string &name);
   void removeChannel(const std::string &name);
+  bool tryCompleteRegistration(Client &client);
+  void removeClientFromAllChannels(Client &client,
+                                   const std::string &quitMsg);
 
   ResponseSink &responseSink();
   const ResponseSink &responseSink() const;

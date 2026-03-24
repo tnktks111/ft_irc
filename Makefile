@@ -9,7 +9,7 @@ CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 
 INCLUDES = -I $(INC_DIR)
 
-BASENAMES = main Channel Client CommandContext Message ReplyBuilder ResponseSink Server ServerContext 
+BASENAMES = main ACommand Channel Client CommandContext CommandDispatcher InviteCommand JoinCommand KickCommand Message ModeCommand NickCommand PartCommand PassCommand PingCommand PrivMsgCommand QuitCommand ReplyBuilder ResponseSink Server ServerContext TopicCommand UserCommand
 
 SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(BASENAMES)))
 OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(BASENAMES)))

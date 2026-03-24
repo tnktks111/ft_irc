@@ -1,4 +1,7 @@
 #include "../include/ServerContext.hpp"
+#include "../include/ReplyBuilder.hpp"
+#include <iostream>
+#include <vector>
 
 ServerContext::ServerContext(std::map<int, Client *> &clients,
                              std::map<std::string, Channel *> &channels,
@@ -72,6 +75,47 @@ void ServerContext::removeChannel(const std::string &name) {
     return;
   delete it->second;
   _channels.erase(it);
+}
+
+bool ServerContext::tryCompleteRegistration(Client &client) {
+  if (client.isRegistered())
+    return false;
+
+  if (client.isPassChecked() && !client.getNickName().empty() &&
+      !client.getUserName().empty()) {
+    client.setRegistered(true);
+    _responseSink.reply(
+        client,
+        ReplyBuilder::rplWelcome(client.getNickName(), client.getPrefix()));
+
+    std::cout << "[+] Client(FD: " << client.getFd()
+              << ") has successfully logged in." << std::endl;
+    return true;
+  }
+  return false;
+}
+
+void ServerContext::removeClientFromAllChannels(Client &client,
+                                                const std::string &quitMsg) {
+  std::vector<std::string> emptyChannels;
+
+  for (std::map<std::string, Channel *>::iterator it = _channels.begin();
+       it != _channels.end(); ++it) {
+    Channel *channel = it->second;
+    if (channel->hasMember(client)) {
+      _responseSink.broadcastExcept(*channel, quitMsg, client);
+      channel->removeMember(client);
+
+      if (channel->getMemberCount() == 0)
+        emptyChannels.push_back(it->first);
+    }
+  }
+
+  for (std::vector<std::string>::iterator it = emptyChannels.begin();
+       it != emptyChannels.end(); ++it) {
+    removeChannel(*it);
+    std::cout << "[-] Channel deleted (no member): " << *it << std::endl;
+  }
 }
 
 ResponseSink &ServerContext::responseSink() { return _responseSink; }
