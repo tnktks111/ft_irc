@@ -105,13 +105,3 @@ void Channel::removeInvite(const std::string &nickName) {
     _invitedUserNicks.erase(it);
   }
 }
-
-void Channel::broadcastMessage(const std::string &msg, int excludeFd) {
-  std::string fullMsg = msg + "\r\n";
-  for (std::map<int, Client *>::iterator it = _members.begin();
-       it != _members.end(); ++it) {
-    if (it->first != excludeFd) {
-      it->second->appendSendBuffer(fullMsg);
-    }
-  }
-}

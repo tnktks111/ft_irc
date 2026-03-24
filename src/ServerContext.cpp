@@ -12,13 +12,6 @@ ServerContext::ServerContext(std::map<int, Client *> &clients,
 
 ServerContext::~ServerContext() {}
 
-Client *ServerContext::findClientByFd(int fd) const {
-  std::map<int, Client *>::const_iterator it = _clients.find(fd);
-  if (it != _clients.end())
-    return it->second;
-  return NULL;
-}
-
 Client *ServerContext::findClientByNick(const std::string &nick) const {
   for (std::map<int, Client *>::const_iterator it = _clients.begin();
        it != _clients.end(); ++it) {
@@ -26,10 +19,6 @@ Client *ServerContext::findClientByNick(const std::string &nick) const {
       return it->second;
   }
   return NULL;
-}
-
-bool ServerContext::hasClientFd(int fd) const {
-  return _clients.find(fd) != _clients.end();
 }
 
 bool ServerContext::hasNick(const std::string &nick,
@@ -51,10 +40,6 @@ Channel *ServerContext::findChannel(const std::string &name) const {
   if (it != _channels.end())
     return it->second;
   return NULL;
-}
-
-bool ServerContext::hasChannel(const std::string &name) const {
-  return _channels.find(name) != _channels.end();
 }
 
 ServerContext::ChannelSlot

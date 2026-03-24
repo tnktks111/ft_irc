@@ -27,14 +27,11 @@ public:
                 ResponseSink &responseSink, const std::string &password);
   ~ServerContext();
 
-  Client *findClientByFd(int fd) const;
   Client *findClientByNick(const std::string &nick) const;
-  bool hasClientFd(int fd) const;
   bool hasNick(const std::string &nick, const Client &exceptClient) const;
   bool hasNick(const std::string &nick, int exceptFd) const;
 
   Channel *findChannel(const std::string &name) const;
-  bool hasChannel(const std::string &name) const;
   ChannelSlot getOrCreateChannel(const std::string &name);
   void removeChannel(const std::string &name);
   bool tryCompleteRegistration(Client &client);
