@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Server is ready to start." << std::endl;
 
   try {
+    Server::setupSignalHandlers();
     Server ircServer(port, password);
     ircServer.start();
   } catch(const std::exception& e) {
