@@ -67,50 +67,17 @@ void Server::setupSignalHandlers() {
 }
 
 void Server::_setNonBlocking(int fd) {
-  /*
-  fcntl(fd, F_SETFL, O_NONBLOCK):
-  fcntl は、ファイル記述子（ソケット）の動作を制御（File
-  CoNTroL）するシステムコールです。 F_SETFL は「フラグを設定（SET
-  FLags）する」という命令です。 O_NONBLOCK
-  が今回の肝で、「このソケットでの入出力操作を待機させない（非ブロックにする）」というフラグです。
-  OS側で設定に失敗すると -1
-  が返されるため、その場合は例外（std::runtime_error）を投げてエラーを知らせます。
-
-  具体的なネットワーク処理での挙動：
-  通常（ブロック）：
-  データが届いていない状態で
-  recv()（受信）を呼ぶと、データが届くまでプログラムがそこでピタッと止まります。
-
-  非ブロック：
-  データが届いていない状態で recv()
-  を呼ぶと、止まらずにすぐ「今はデータがないよ（EAGAIN /
-  EWOULDBLOCK）」というエラーを返して次の処理へ進ませてくれます。
-  */
   if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
     throw std::runtime_error("Error: failed to setup non-blocking mode.");
   }
 }
 
 void Server::_setupServerSocket() {
-  // 通信を行うためのソケットの作成(socket(プロトコルファミリー、ソケットのタイプ、使用するプロトコル))
   _serverFd = socket(AF_INET, SOCK_STREAM, 0);
   if (_serverFd == -1) {
     throw std::runtime_error("Error: failed to create server socket.");
   }
 
-  /*
-  サーバーを再起動したときに、同じポート番号をすぐに再利用できるようにする設定
-  Address already in
-  useというエラーでサーバーが起動できなくなるのを防ぐためのおまじない
-  通常、ネットワークサーバーを終了させた直後、OSはそのポート（例：8080番など）を「念のため」しばらくの間（TIME_WAIT状態といいます）ロックします。
-
-  これがない場合：
-  サーバーを停止してすぐに再起動しようとすると、「さっきまで使っていたポートがまだ解放されていない」とOSに怒られ、サーバーの起動に失敗します（通常、数分待つ必要があります）。
-
-  これがある場合：
-  OSに対し「さっき使っていたポートだけど、すぐに使い回して大丈夫だよ！」と伝えるため、停止後すぐに再起動が可能になります。
-  開発中にサーバーを何度も「停止→修正→起動」と繰り返す場合、この設定がないと非常に不便なため、ほぼ全てのサーバープログラムで書かれる定番の処理です。
-  */
   int opt = 1;
   if (setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) ==
       -1) {
@@ -119,41 +86,21 @@ void Server::_setupServerSocket() {
 
   _setNonBlocking(_serverFd);
 
-  /*
-  AF_INET...「IPv4」を使うことを指定しています（AF = Address Family）
-  INADDR_ANY...どのIPアドレスからの接続も受け付ける」という設定です。サーバーに複数のLANカードやIPがあっても、全部で待ち受けます。
-  htons...リトルエンディアン→ビッグエンディアンへ変換
-  */
   struct sockaddr_in serverAddr;
   std::memset(&serverAddr, 0, sizeof(serverAddr));
   serverAddr.sin_family = AF_INET;
   serverAddr.sin_addr.s_addr = INADDR_ANY;
   serverAddr.sin_port = htons(_port);
 
-  // socketを特定のIPアドレスとポートに紐づけ(bind(ソケット、ソケットに割り当てるアドレスやポート番号の情報、←のサイズ（バイト数）))
   if (bind(_serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) ==
       -1) {
     throw std::runtime_error("Error: failed to bind port.");
   }
 
-  // 接続の待受を開始(listen(接続を待つソケット、接続要求を保持する数))
   if (listen(_serverFd, SOMAXCONN) == -1) {
     throw std::runtime_error("Error: listen() failed.");
   }
 
-  /*
-  struct pollfd server PollFd;
-  - poll関数で監視したい情報を入れるための構造体を作ります。
-  serverPollFd.fd = _serverFd;
-  - 監視対象のソケット（サーバーの窓口）を指定します。
-  serverPollFd.events = POLLIN;
-  - 「何が起きたら教えてほしいか」を設定します。POLLIN
-  は「データが入ってきた（IN）」＝「新しい接続が来た」ことを指します。
-  serverPollFd.revents = 0;
-  - 「実際に何が起きたか」をOSが書き込む場所です。最初は 0
-  でクリアしておきます。_pollFds.push_back(...);
-  - 監視対象リスト（vector など）に追加します。
-  */
   struct pollfd serverPollFd;
   serverPollFd.fd = _serverFd;
   serverPollFd.events = POLLIN;
