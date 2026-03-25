@@ -1,4 +1,4 @@
-#include "../include/Message.hpp"
+#include "Message.hpp"
 #include <sstream>
 Message::Message(const std::string &rawMessage) { _parse(rawMessage); }
 Message::~Message() {}

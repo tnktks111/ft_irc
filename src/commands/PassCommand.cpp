@@ -1,5 +1,5 @@
-#include "../include/PassCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "PassCommand.hpp"
+#include "ReplyBuilder.hpp"
 
 PassCommand::PassCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 PassCommand::~PassCommand() {}

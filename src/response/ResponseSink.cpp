@@ -1,6 +1,6 @@
-#include "../include/ResponseSink.hpp"
-#include "../include/Channel.hpp"
-#include "../include/Client.hpp"
+#include "ResponseSink.hpp"
+#include "Channel.hpp"
+#include "Client.hpp"
 
 ResponseSink::ResponseSink() {}
 ResponseSink::~ResponseSink() {}

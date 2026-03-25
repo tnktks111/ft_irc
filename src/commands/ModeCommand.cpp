@@ -1,5 +1,5 @@
-#include "../include/ModeCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "ModeCommand.hpp"
+#include "ReplyBuilder.hpp"
 #include <cstdlib>
 #include <sstream>
 

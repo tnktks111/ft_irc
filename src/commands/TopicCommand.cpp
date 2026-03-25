@@ -1,5 +1,5 @@
-#include "../include/TopicCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "TopicCommand.hpp"
+#include "ReplyBuilder.hpp"
 
 TopicCommand::TopicCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 TopicCommand::~TopicCommand() {}

@@ -1,5 +1,5 @@
-#include "../include/PingCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "PingCommand.hpp"
+#include "ReplyBuilder.hpp"
 
 PingCommand::PingCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 PingCommand::~PingCommand() {}

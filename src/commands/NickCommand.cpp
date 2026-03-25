@@ -1,5 +1,5 @@
-#include "../include/NickCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "NickCommand.hpp"
+#include "ReplyBuilder.hpp"
 
 NickCommand::NickCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 NickCommand::~NickCommand() {}

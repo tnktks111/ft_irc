@@ -1,4 +1,4 @@
-#include "../include/ACommand.hpp"
+#include "ACommand.hpp"
 
 ACommand::ACommand() {}
 ACommand::~ACommand() {}

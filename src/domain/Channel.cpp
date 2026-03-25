@@ -1,4 +1,4 @@
-#include "../include/Channel.hpp"
+#include "Channel.hpp"
 #include <algorithm>
 
 Channel::Channel(const std::string &name)

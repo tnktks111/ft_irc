@@ -1,5 +1,5 @@
-#include "../include/KickCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "KickCommand.hpp"
+#include "ReplyBuilder.hpp"
 #include <iostream>
 
 KickCommand::KickCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}

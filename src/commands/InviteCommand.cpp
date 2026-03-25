@@ -1,5 +1,5 @@
-#include "../include/InviteCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "InviteCommand.hpp"
+#include "ReplyBuilder.hpp"
 
 InviteCommand::InviteCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 InviteCommand::~InviteCommand() {}
