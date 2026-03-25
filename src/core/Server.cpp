@@ -2,6 +2,7 @@
 #include "CommandContext.hpp"
 #include "Message.hpp"
 #include <cerrno>
+#include <csignal>
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
@@ -11,6 +12,8 @@
 #include <stdexcept>
 #include <sys/socket.h>
 #include <unistd.h>
+
+volatile sig_atomic_t Server::_shouldStop = 0;
 
 Server::Server(int port, const std::string &password)
     : _port(port), _password(password), _serverFd(-1), _responseSink(),
@@ -31,6 +34,34 @@ Server::~Server() {
   if (_serverFd != -1) {
     close(_serverFd);
     std::cout << "Server socket closed." << std::endl;
+  }
+}
+
+void Server::_handleSignal(int signo) {
+  (void)signo;
+  _shouldStop = 1;
+}
+
+void Server::setupSignalHandlers() {
+  struct sigaction sa;
+  if (sigemptyset(&sa.sa_mask) == -1) {
+    throw std::runtime_error("Error: sigemptyset() failed.");
+  }
+  sa.sa_handler = Server::_handleSignal;
+  sa.sa_flags = 0;
+  if (sigaction(SIGINT, &sa, NULL) == -1 ||
+      sigaction(SIGTERM, &sa, NULL) == -1) {
+    throw std::runtime_error("Error: sigaction() failed.");
+  }
+
+  struct sigaction sa_pipe;
+  if (sigemptyset(&sa_pipe.sa_mask) == -1) {
+    throw std::runtime_error("Error: sigemptyset() failed.");
+  }
+  sa_pipe.sa_handler = SIG_IGN;
+  sa_pipe.sa_flags = 0;
+  if (sigaction(SIGPIPE, &sa_pipe, NULL) == -1) {
+    throw std::runtime_error("Error: sigaction() failed.");
   }
 }
 
@@ -129,10 +160,13 @@ void Server::_setupServerSocket() {
   _pollFds.push_back(serverPollFd);
 }
 
-void Server::_waitForEvents() {
+bool Server::_waitForEvents() {
   if (poll(&_pollFds[0], _pollFds.size(), -1) == -1) {
+    if (errno == EINTR)
+      return false;
     throw std::runtime_error("Error: poll() failed.");
   }
+  return true;
 }
 
 void Server::_processActiveConnections() {
@@ -149,7 +183,7 @@ void Server::_processActiveConnections() {
         std::string quitMsg = ":" + _clients[_pollFds[i].fd]->getPrefix() +
                               " QUIT :Connection closed (Error/Hangup)";
         _serverCtx.removeClientFromAllChannels(*_clients[_pollFds[i].fd],
-                       quitMsg);
+                                               quitMsg);
 
         delete _clients[_pollFds[i].fd];
         _clients.erase(_pollFds[i].fd);
@@ -188,7 +222,7 @@ void Server::_processActiveConnections() {
           if (bytesSent > 0) {
             client->eraseSendBuffer(bytesSent);
           } else if (bytesSent == -1) {
-            if (errno != EAGAIN && errno != EWOULDBLOCK) {
+            if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
               std::cerr << "Error: send() failed on Fd " << _pollFds[i].fd
                         << std::endl;
             }
@@ -249,7 +283,7 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
               << std::endl;
     return DISCONNECT;
   } else {
-    if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
       return KEEP_ALIVE;
     }
     std::cout << "Error: recv failed(). (errno = " << errno << ")" << std::endl;
@@ -283,9 +317,12 @@ void Server::start() {
 
   std::cout << "Server is running on port " << _port << "..." << std::endl;
 
-  while (true) {
+  while (!_shouldStop) {
     _updatePollEvents();
-    _waitForEvents();
+    if (_waitForEvents() == false)
+      break;
     _processActiveConnections();
   }
+
+  std::cout << "Server shutdown..." << std::endl;
 }
