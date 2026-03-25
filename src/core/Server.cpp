@@ -261,13 +261,12 @@ void Server::_acceptNewConnection() {
 Server::ConnectionStatus
 Server::_handleClientMessage(struct pollfd &clientPollFd) {
   char buffer[1024];
-  std::memset(buffer, 0, sizeof(buffer));
 
-  int bytesRead = recv(clientPollFd.fd, buffer, sizeof(buffer) - 1, 0);
+  int bytesRead = recv(clientPollFd.fd, buffer, sizeof(buffer), 0);
 
   if (bytesRead > 0) {
 
-    _clients[clientPollFd.fd]->appendRecvBuffer(buffer);
+    _clients[clientPollFd.fd]->appendRecvBuffer(std::string(buffer, bytesRead));
 
     std::string rawMsg;
 
