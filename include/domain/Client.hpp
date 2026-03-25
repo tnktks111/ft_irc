@@ -10,6 +10,7 @@ private:
   Client &operator=(const Client &other);
 
   int _fd;
+  const std::string _host;
   std::string _nickName;
   std::string _userName;
 
@@ -20,7 +21,7 @@ private:
   bool _isRegistered;
 
 public:
-  Client(int fd);
+  Client(int fd, const std::string& host);
   ~Client();
 
   int getFd() const;

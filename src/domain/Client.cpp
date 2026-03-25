@@ -1,9 +1,9 @@
 #include "Client.hpp"
 #include <unistd.h>
 
-Client::Client(int fd)
-    : _fd(fd), _nickName(""), _userName(""), _recvBuffer(""), _sendBuffer(""),
-      _isPassChecked(false), _isRegistered(false) {}
+Client::Client(int fd, const std::string &host)
+    : _fd(fd), _host(host), _nickName(""), _userName(""), _recvBuffer(""),
+      _sendBuffer(""), _isPassChecked(false), _isRegistered(false) {}
 
 Client::~Client() { close(_fd); }
 
@@ -47,5 +47,5 @@ void Client::setPassChecked(bool status) { _isPassChecked = status; }
 void Client::setRegistered(bool status) { _isRegistered = status; }
 
 std::string Client::getPrefix() const {
-  return _nickName + "!" + _userName + "@localhost";
+  return _nickName + "!" + _userName + "@" + _host;
 }
