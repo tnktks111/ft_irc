@@ -1,4 +1,4 @@
-#include "../include/QuitCommand.hpp"
+#include "QuitCommand.hpp"
 
 QuitCommand::QuitCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 QuitCommand::~QuitCommand() {}

@@ -7,12 +7,34 @@ CXX = c++
 
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 
-INCLUDES = -I $(INC_DIR)
+INCLUDES = -I $(INC_DIR) -I $(INC_DIR)/core -I $(INC_DIR)/commands -I $(INC_DIR)/domain -I $(INC_DIR)/response
 
-BASENAMES = main ACommand Channel Client CommandContext CommandDispatcher InviteCommand JoinCommand KickCommand Message ModeCommand NickCommand PartCommand PassCommand PingCommand PrivMsgCommand QuitCommand ReplyBuilder ResponseSink Server ServerContext TopicCommand UserCommand
+SRCS = \
+	$(SRC_DIR)/app/main.cpp \
+	$(SRC_DIR)/core/CommandContext.cpp \
+	$(SRC_DIR)/core/CommandDispatcher.cpp \
+	$(SRC_DIR)/core/Server.cpp \
+	$(SRC_DIR)/core/ServerContext.cpp \
+	$(SRC_DIR)/commands/ACommand.cpp \
+	$(SRC_DIR)/commands/InviteCommand.cpp \
+	$(SRC_DIR)/commands/JoinCommand.cpp \
+	$(SRC_DIR)/commands/KickCommand.cpp \
+	$(SRC_DIR)/commands/ModeCommand.cpp \
+	$(SRC_DIR)/commands/NickCommand.cpp \
+	$(SRC_DIR)/commands/PartCommand.cpp \
+	$(SRC_DIR)/commands/PassCommand.cpp \
+	$(SRC_DIR)/commands/PingCommand.cpp \
+	$(SRC_DIR)/commands/PrivMsgCommand.cpp \
+	$(SRC_DIR)/commands/QuitCommand.cpp \
+	$(SRC_DIR)/commands/TopicCommand.cpp \
+	$(SRC_DIR)/commands/UserCommand.cpp \
+	$(SRC_DIR)/domain/Channel.cpp \
+	$(SRC_DIR)/domain/Client.cpp \
+	$(SRC_DIR)/domain/Message.cpp \
+	$(SRC_DIR)/response/ReplyBuilder.cpp \
+	$(SRC_DIR)/response/ResponseSink.cpp
 
-SRCS = $(addprefix $(SRC_DIR)/, $(addsuffix .cpp, $(BASENAMES)))
-OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(BASENAMES)))
+OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS = $(OBJS:.o=.d)
 
 all: $(NAME)
@@ -21,7 +43,7 @@ $(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
-	mkdir -p $(OBJ_DIR)
+	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:

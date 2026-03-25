@@ -1,4 +1,4 @@
-#include "../include/ReplyBuilder.hpp"
+#include "ReplyBuilder.hpp"
 
 std::string ReplyBuilder::rplWelcome(const std::string &clientName,
                                      const std::string &clientPrefix) {

@@ -1,5 +1,5 @@
-#include "../include/UserCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "UserCommand.hpp"
+#include "ReplyBuilder.hpp"
 
 UserCommand::UserCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 UserCommand::~UserCommand() {}

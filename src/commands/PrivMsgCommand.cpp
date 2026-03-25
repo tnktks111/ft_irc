@@ -1,5 +1,5 @@
-#include "../include/PrivMsgCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "PrivMsgCommand.hpp"
+#include "ReplyBuilder.hpp"
 
 PrivMsgCommand::PrivMsgCommand(ServerContext &serverCtx)
     : _serverCtx(serverCtx) {}

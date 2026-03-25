@@ -1,5 +1,5 @@
-#include "../include/ServerContext.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "ServerContext.hpp"
+#include "ReplyBuilder.hpp"
 #include <iostream>
 #include <vector>
 

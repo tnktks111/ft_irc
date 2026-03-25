@@ -1,5 +1,5 @@
-#include "../include/PartCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "PartCommand.hpp"
+#include "ReplyBuilder.hpp"
 #include <iostream>
 
 PartCommand::PartCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}

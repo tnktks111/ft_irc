@@ -1,5 +1,5 @@
-#include "../include/JoinCommand.hpp"
-#include "../include/ReplyBuilder.hpp"
+#include "JoinCommand.hpp"
+#include "ReplyBuilder.hpp"
 #include <iostream>
 #include <map>
 

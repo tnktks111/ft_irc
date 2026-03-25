@@ -1,6 +1,6 @@
-#include "../include/Server.hpp"
-#include "../include/CommandContext.hpp"
-#include "../include/Message.hpp"
+#include "Server.hpp"
+#include "CommandContext.hpp"
+#include "Message.hpp"
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
