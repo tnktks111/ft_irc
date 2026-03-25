@@ -1,6 +1,7 @@
 #include "Server.hpp"
 #include "CommandContext.hpp"
 #include "Message.hpp"
+#include <arpa/inet.h>
 #include <cerrno>
 #include <csignal>
 #include <cstring>
@@ -243,6 +244,13 @@ void Server::_acceptNewConnection() {
 
   int clientFd = accept(_serverFd, (struct sockaddr *)&clientAddr, &clientLen);
   if (clientFd >= 0) {
+    char str[INET_ADDRSTRLEN];
+    if (inet_ntop(AF_INET, &clientAddr.sin_addr, str, sizeof(str)) == NULL) {
+      close(clientFd);
+      std::cerr << "Error: inet_ntop() failed" << std::endl;
+      return;
+    }
+
     _setNonBlocking(clientFd);
 
     struct pollfd clientPollFd;
@@ -251,7 +259,8 @@ void Server::_acceptNewConnection() {
     clientPollFd.revents = 0;
     _pollFds.push_back(clientPollFd);
 
-    _clients.insert(std::make_pair(clientFd, new Client(clientFd)));
+    _clients.insert(
+        std::make_pair(clientFd, new Client(clientFd, std::string(str))));
 
     std::cout << "[+] A new client has connected. Fd: " << clientFd
               << std::endl;
@@ -319,7 +328,7 @@ void Server::start() {
   while (!_shouldStop) {
     _updatePollEvents();
     if (_waitForEvents() == false)
-      break;
+      continue;
     _processActiveConnections();
   }
 
