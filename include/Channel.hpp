@@ -65,8 +65,6 @@ public:
   void addInvite(const std::string &nickName);
   bool isInvited(const std::string &nickName) const;
   void removeInvite(const std::string &nickName);
-
-  void broadcastMessage(const std::string &msg, int excludeFd);
 };
 
 #endif
