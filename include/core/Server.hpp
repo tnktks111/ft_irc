@@ -28,13 +28,26 @@ private:
   static volatile sig_atomic_t _shouldStop;
 
   enum ConnectionStatus { KEEP_ALIVE, DISCONNECT };
+  enum LoopAction { CONTINUE_LOOP, KEEP_PROCESSING };
 
   Server();
   Server(const Server &other);
   Server &operator=(const Server &other);
+
+  static std::string _buildErrnoMessage(const std::string &context);
+  static std::string _buildFdErrnoMessage(const std::string &context, int fd);
+
   void _setupServerSocket();
   void _setNonBlocking(int fd);
   bool _waitForEvents();
+  void _registerClient(int clientFd, const std::string &host);
+  void _disconnectClient(size_t &index, const std::string &quitMsg);
+  std::string _makeQuitMessage(const Client &client, const std::string &reason) const;
+
+  void _processPollError(size_t &index);
+  LoopAction _processReadableEvent(size_t &index);
+  void _flushSendBuffer(size_t index);
+
   void _processActiveConnections();
   void _acceptNewConnection();
   ConnectionStatus _handleClientMessage(struct pollfd &clientPollFd);
