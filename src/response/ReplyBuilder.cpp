@@ -61,6 +61,10 @@ std::string ReplyBuilder::errCantSendToChannel(const std::string &clientName,
   return "404 " + clientName + " " + channelName + " :Cannot send to channel";
 }
 
+std::string ReplyBuilder::errNoRecipient(const std::string &command) {
+  return "411 :No recipient given (" + command + ")";
+}
+
 std::string ReplyBuilder::errNoOrigin(const std::string &clientName) {
   return "409 " + clientName + " :No origin specified";
 }

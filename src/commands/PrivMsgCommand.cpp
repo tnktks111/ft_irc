@@ -6,7 +6,11 @@ PrivMsgCommand::PrivMsgCommand(ServerContext &serverCtx)
 PrivMsgCommand::~PrivMsgCommand() {}
 
 bool PrivMsgCommand::execute(CommandContext &ctx) {
-  if (ctx.params().size() < 2) {
+  if (ctx.params().empty()) {
+    ctx.reply(ReplyBuilder::errNoRecipient("PRIVMSG"));
+    return true;
+  }
+  if (ctx.params().size() < 2 || ctx.params()[1].empty()) {
     ctx.reply(ReplyBuilder::errNoTextToSend(ctx.nick()));
     return true;
   }
