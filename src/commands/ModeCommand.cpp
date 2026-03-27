@@ -78,6 +78,10 @@ bool ModeCommand::execute(CommandContext &ctx) {
           ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
           return true;
         }
+        if (!channel->getPassword().empty()) {
+          ctx.reply(ReplyBuilder::errKeySet(chName));
+          return true;
+        }
         channel->setPassword(ctx.params()[paramIndex]);
         modeParams += " " + ctx.params()[paramIndex++];
       } else {
