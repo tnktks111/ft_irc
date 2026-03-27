@@ -1,4 +1,4 @@
-This project has been created as part of the 42 curriculum by ttanaka, sguruge.
+*This project has been created as part of the 42 curriculum by ttanaka, sguruge, sabe.*
 
 ## Description
 The main goal ft_irc project the implementation of an irc server including an non-blocking interaction via TCP/IP (v4 or v6). The mandatory features are channel systems, authentication systems and private conversations for clients. In addition, channel operators must be implemented with the commands below.
