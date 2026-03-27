@@ -53,8 +53,9 @@ bool CommandDispatcher::dispatch(CommandContext &ctx) {
       _commands.find(ctx.command());
   if (it == _commands.end()) {
     if (ctx.isRegistered()) {
-      std::cout << "Command from an authenticated User: " << ctx.command()
-                << std::endl;
+      ctx.reply(ReplyBuilder::errUnknownCommand(ctx.command()));
+      std::cout << "Unknown command from authenticated User: "
+                << ctx.command() << std::endl; // [TODO] この出力いらないなら消す
     }
     return true;
   }
