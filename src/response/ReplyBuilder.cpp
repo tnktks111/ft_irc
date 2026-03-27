@@ -56,6 +56,10 @@ std::string ReplyBuilder::errNoSuchChannel(const std::string &clientName,
   return "403 " + clientName + " " + channelName + " :No such channel";
 }
 
+std::string ReplyBuilder::errUnknownCommand(const std::string &command) {
+  return "421 " + command + " :Unknown command";
+}
+
 std::string ReplyBuilder::errCantSendToChannel(const std::string &clientName,
                                                const std::string &channelName) {
   return "404 " + clientName + " " + channelName + " :Cannot send to channel";
