@@ -139,6 +139,10 @@ std::string ReplyBuilder::errBadChannelKey(const std::string &clientName,
   return "475 " + clientName + " " + channelName + " :Cannot join channel (+k)";
 }
 
+std::string ReplyBuilder::errKeySet(const std::string &channelName) {
+  return "467 " + channelName + " :Channel key already set";
+}
+
 std::string ReplyBuilder::errChanOPrivsNeeded(const std::string &clientName,
                                               const std::string &channelName) {
   return "482 " + clientName + " " + channelName +
