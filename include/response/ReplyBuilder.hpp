@@ -35,6 +35,7 @@ public:
                                    const std::string &target);
   static std::string errNoSuchChannel(const std::string &clientName,
                                       const std::string &channelName);
+  static std::string errNoRecipient(const std::string &command);
   static std::string errNoOrigin(const std::string &clientName);
   static std::string errNoTextToSend(const std::string &clientName);
   static std::string errNoNicknameGiven();
