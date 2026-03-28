@@ -81,6 +81,10 @@ std::string ReplyBuilder::errNoNicknameGiven() {
   return "431 * :No nickname given";
 }
 
+std::string ReplyBuilder::erroneusNickName(const std::string &nickName) {
+  return "432 * " + nickName + " :Erroneous nickname";
+}
+
 std::string ReplyBuilder::errNickNameInUse(const std::string &nickName) {
   return "433 * " + nickName + " :Nickname is already in use";
 }

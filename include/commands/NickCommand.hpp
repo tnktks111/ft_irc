@@ -6,16 +6,21 @@
 
 class NickCommand : public ACommand {
 private:
-	ServerContext &_serverCtx;
+  ServerContext &_serverCtx;
 
-	NickCommand(const NickCommand &other);
-	NickCommand &operator=(const NickCommand &other);
+  NickCommand(const NickCommand &other);
+  NickCommand &operator=(const NickCommand &other);
+
+  static bool _isLetter(char c);
+  static bool _isSpecial(char c);
+  static bool _isDigit(char c);
+  static bool _isValidNick(const std::string &name);
 
 public:
-	NickCommand(ServerContext &serverCtx);
-	virtual ~NickCommand();
+  NickCommand(ServerContext &serverCtx);
+  virtual ~NickCommand();
 
-	virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext &ctx);
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include "ServerContext.hpp"
 #include "ReplyBuilder.hpp"
+#include <cctype>
 #include <iostream>
 #include <vector>
 
@@ -12,24 +13,52 @@ ServerContext::ServerContext(std::map<int, Client *> &clients,
 
 ServerContext::~ServerContext() {}
 
+char ServerContext::_normalizeNickChar(char c) {
+  if (c >= 'A' && c <= 'Z') {
+    return c + ('a' - 'A');
+  }
+  switch (c) {
+  case '[':
+    return '{';
+  case ']':
+    return '}';
+  case '\\':
+    return '|';
+  case '~':
+    return '^';
+  default:
+    return c;
+  }
+}
+
+const std::string ServerContext::_normalizeNickStr(const std::string &name) {
+  std::string normalizedName = name;
+  std::transform(normalizedName.begin(), normalizedName.end(),
+                 normalizedName.begin(), ServerContext::_normalizeNickChar);
+  return normalizedName;
+}
+
 Client *ServerContext::findClientByNick(const std::string &nick) const {
+  std::string normalizedNick = _normalizeNickStr(nick);
   for (std::map<int, Client *>::const_iterator it = _clients.begin();
        it != _clients.end(); ++it) {
-    if (it->second->getNickName() == nick)
+    if (_normalizeNickStr(it->second->getNickName()) == normalizedNick)
       return it->second;
   }
   return NULL;
 }
 
 bool ServerContext::hasNick(const std::string &nick,
-                           const Client &exceptClient) const {
+                            const Client &exceptClient) const {
   return hasNick(nick, exceptClient.getFd());
 }
 
 bool ServerContext::hasNick(const std::string &nick, int exceptFd) const {
+  std::string normalizedNick = _normalizeNickStr(nick);
   for (std::map<int, Client *>::const_iterator it = _clients.begin();
        it != _clients.end(); ++it) {
-    if (it->first != exceptFd && it->second->getNickName() == nick)
+    if (it->first != exceptFd &&
+        _normalizeNickStr(it->second->getNickName()) == normalizedNick)
       return true;
   }
   return false;
@@ -69,9 +98,8 @@ bool ServerContext::tryCompleteRegistration(Client &client) {
   if (client.isPassChecked() && !client.getNickName().empty() &&
       !client.getUserName().empty()) {
     client.setRegistered(true);
-    _responseSink.reply(
-        client,
-        ReplyBuilder::rplWelcome(client.getNickName(), client.getPrefix()));
+    _responseSink.reply(client, ReplyBuilder::rplWelcome(client.getNickName(),
+                                                         client.getPrefix()));
 
     std::cout << "[+] Client(FD: " << client.getFd()
               << ") has successfully logged in." << std::endl;

@@ -20,6 +20,9 @@ private:
   ResponseSink &_responseSink;
   const std::string &_password;
 
+  static char _normalizeNickChar(char c);
+  static const std::string _normalizeNickStr(const std::string &name);
+
 public:
   typedef std::pair<Channel *, bool> ChannelSlot;
   ServerContext(std::map<int, Client *> &clients,
@@ -35,8 +38,7 @@ public:
   ChannelSlot getOrCreateChannel(const std::string &name);
   void removeChannel(const std::string &name);
   bool tryCompleteRegistration(Client &client);
-  void removeClientFromAllChannels(Client &client,
-                                   const std::string &quitMsg);
+  void removeClientFromAllChannels(Client &client, const std::string &quitMsg);
 
   ResponseSink &responseSink();
   const ResponseSink &responseSink() const;
