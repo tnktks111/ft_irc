@@ -94,13 +94,20 @@ bool ModeCommand::execute(CommandContext &ctx) {
       }
       std::string targetNick = ctx.params()[paramIndex++];
       Client *targetClient = _serverCtx.findClientByNick(targetNick);
-      if (targetClient != NULL && channel->hasMember(*targetClient)) {
-        if (adding)
-          channel->addOperator(*targetClient);
-        else
-          channel->removeOperator(*targetClient);
-        modeParams += " " + targetNick;
+      if (targetClient == NULL) {
+        ctx.reply(ReplyBuilder::errNoSuchNick(ctx.nick(), targetNick));
+        return true;
       }
+      if (!channel->hasMember(*targetClient)) {
+        ctx.reply(
+            ReplyBuilder::errUserNotInChannel(ctx.nick(), targetNick, chName));
+        return true;
+      }
+      if (adding)
+        channel->addOperator(*targetClient);
+      else
+        channel->removeOperator(*targetClient);
+      modeParams += " " + targetNick;
     } else if (flag == 'l') {
       if (adding) {
         if (ctx.params().size() <= paramIndex) {
