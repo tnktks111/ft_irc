@@ -54,6 +54,11 @@ fclean: clean
 
 re: fclean all
 
+fmt:
+	@echo "Formatting code..."
+	@find . -type f \( -name "*.cpp" -o -name "*.hpp" \) -not -path "./.*" -exec clang-format -i {} +
+	@echo "Done."
+
 -include $(DEPS)
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re fmt
