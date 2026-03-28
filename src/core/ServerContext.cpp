@@ -1,5 +1,6 @@
 #include "ServerContext.hpp"
 #include "ReplyBuilder.hpp"
+#include <algorithm>
 #include <cctype>
 #include <iostream>
 #include <vector>
