@@ -1,98 +1,75 @@
 #include "ServerContext.hpp"
-#include "ReplyBuilder.hpp"
 #include <algorithm>
 #include <cctype>
 #include <iostream>
 #include <vector>
+#include "IrcCaseMapping.hpp"
+#include "ReplyBuilder.hpp"
 
-ServerContext::ServerContext(std::map<int, Client *> &clients,
-                             std::map<std::string, Channel *> &channels,
-                             ResponseSink &responseSink,
-                             const std::string &password)
-    : _clients(clients), _channels(channels), _responseSink(responseSink),
+ServerContext::ServerContext(std::map<int, Client*>& clients,
+                             std::map<std::string, Channel*>& channels,
+                             ResponseSink& responseSink,
+                             const std::string& password)
+    : _clients(clients),
+      _channels(channels),
+      _responseSink(responseSink),
       _password(password) {}
 
 ServerContext::~ServerContext() {}
 
-char ServerContext::_normalizeNickChar(char c) {
-  if (c >= 'A' && c <= 'Z') {
-    return c + ('a' - 'A');
-  }
-  switch (c) {
-  case '[':
-    return '{';
-  case ']':
-    return '}';
-  case '\\':
-    return '|';
-  case '~':
-    return '^';
-  default:
-    return c;
-  }
-}
-
-const std::string ServerContext::_normalizeNickStr(const std::string &name) {
-  std::string normalizedName = name;
-  std::transform(normalizedName.begin(), normalizedName.end(),
-                 normalizedName.begin(), ServerContext::_normalizeNickChar);
-  return normalizedName;
-}
-
-Client *ServerContext::findClientByNick(const std::string &nick) const {
-  std::string normalizedNick = _normalizeNickStr(nick);
-  for (std::map<int, Client *>::const_iterator it = _clients.begin();
+Client* ServerContext::findClientByNick(const std::string& nick) const {
+  for (std::map<int, Client*>::const_iterator it = _clients.begin();
        it != _clients.end(); ++it) {
-    if (_normalizeNickStr(it->second->getNickName()) == normalizedNick)
+    if (IrcCaseMapping::equals(it->second->getNickName(), nick))
       return it->second;
   }
   return NULL;
 }
 
-bool ServerContext::hasNick(const std::string &nick,
-                            const Client &exceptClient) const {
+bool ServerContext::hasNick(const std::string& nick,
+                            const Client& exceptClient) const {
   return hasNick(nick, exceptClient.getFd());
 }
 
-bool ServerContext::hasNick(const std::string &nick, int exceptFd) const {
-  std::string normalizedNick = _normalizeNickStr(nick);
-  for (std::map<int, Client *>::const_iterator it = _clients.begin();
+bool ServerContext::hasNick(const std::string& nick, int exceptFd) const {
+  for (std::map<int, Client*>::const_iterator it = _clients.begin();
        it != _clients.end(); ++it) {
     if (it->first != exceptFd &&
-        _normalizeNickStr(it->second->getNickName()) == normalizedNick)
+        IrcCaseMapping::equals(it->second->getNickName(), nick))
       return true;
   }
   return false;
 }
 
-Channel *ServerContext::findChannel(const std::string &name) const {
-  std::map<std::string, Channel *>::const_iterator it = _channels.find(name);
+Channel* ServerContext::findChannel(const std::string& name) const {
+  std::map<std::string, Channel*>::const_iterator it = _channels.find(IrcCaseMapping::normalize(name));
   if (it != _channels.end())
     return it->second;
   return NULL;
 }
 
-ServerContext::ChannelSlot
-ServerContext::getOrCreateChannel(const std::string &name) {
-  std::map<std::string, Channel *>::iterator it = _channels.find(name);
+ServerContext::ChannelSlot ServerContext::getOrCreateChannel(
+    const std::string& name) {
+  std::string normalizedName = IrcCaseMapping::normalize(name);
+  std::map<std::string, Channel*>::iterator it = _channels.find(normalizedName);
   if (it != _channels.end()) {
     return ChannelSlot(it->second, false);
   } else {
-    Channel *newChannel = new Channel(name);
-    _channels[name] = newChannel;
+    Channel* newChannel = new Channel(name);
+    _channels[normalizedName] = newChannel;
     return ChannelSlot(newChannel, true);
   }
 }
 
-void ServerContext::removeChannel(const std::string &name) {
-  std::map<std::string, Channel *>::iterator it = _channels.find(name);
+void ServerContext::removeChannel(const std::string& name) {
+  std::map<std::string, Channel*>::iterator it = _channels.find(IrcCaseMapping::normalize(name));
   if (it == _channels.end())
     return;
   delete it->second;
   _channels.erase(it);
 }
 
-bool ServerContext::tryCompleteRegistration(Client &client) {
+bool ServerContext::tryCompleteRegistration(Client& client) {
   if (client.isRegistered())
     return false;
 
@@ -109,19 +86,19 @@ bool ServerContext::tryCompleteRegistration(Client &client) {
   return false;
 }
 
-void ServerContext::removeClientFromAllChannels(Client &client,
-                                                const std::string &quitMsg) {
+void ServerContext::removeClientFromAllChannels(Client& client,
+                                                const std::string& quitMsg) {
   std::vector<std::string> emptyChannels;
 
-  for (std::map<std::string, Channel *>::iterator it = _channels.begin();
+  for (std::map<std::string, Channel*>::iterator it = _channels.begin();
        it != _channels.end(); ++it) {
-    Channel *channel = it->second;
+    Channel* channel = it->second;
     if (channel->hasMember(client)) {
       _responseSink.broadcastExcept(*channel, quitMsg, client);
       channel->removeMember(client);
 
       if (channel->getMemberCount() == 0)
-        emptyChannels.push_back(it->first);
+        emptyChannels.push_back(channel->getName());
     }
   }
 
@@ -132,10 +109,14 @@ void ServerContext::removeClientFromAllChannels(Client &client,
   }
 }
 
-ResponseSink &ServerContext::responseSink() { return _responseSink; }
-
-const ResponseSink &ServerContext::responseSink() const {
+ResponseSink& ServerContext::responseSink() {
   return _responseSink;
 }
 
-const std::string &ServerContext::password() const { return _password; }
+const ResponseSink& ServerContext::responseSink() const {
+  return _responseSink;
+}
+
+const std::string& ServerContext::password() const {
+  return _password;
+}

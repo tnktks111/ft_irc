@@ -1,11 +1,11 @@
 #include "PrivMsgCommand.hpp"
 #include "ReplyBuilder.hpp"
 
-PrivMsgCommand::PrivMsgCommand(ServerContext &serverCtx)
+PrivMsgCommand::PrivMsgCommand(ServerContext& serverCtx)
     : _serverCtx(serverCtx) {}
 PrivMsgCommand::~PrivMsgCommand() {}
 
-bool PrivMsgCommand::execute(CommandContext &ctx) {
+bool PrivMsgCommand::execute(CommandContext& ctx) {
   if (ctx.params().empty()) {
     ctx.reply(ReplyBuilder::errNoRecipient("PRIVMSG"));
     return true;
@@ -19,8 +19,8 @@ bool PrivMsgCommand::execute(CommandContext &ctx) {
   std::string text = ctx.params()[1];
   std::string fullMsg = ":" + ctx.prefix() + " PRIVMSG " + target + " :" + text;
 
-  if (target[0] == '#') {
-    Channel *channel = _serverCtx.findChannel(target);
+  if (!target.empty() && Channel::isChannelPrefix(*target.begin())) {
+    Channel* channel = _serverCtx.findChannel(target);
     if (channel == NULL) {
       ctx.reply(ReplyBuilder::errNoSuchNick(ctx.nick(), target));
       return true;
@@ -33,7 +33,7 @@ bool PrivMsgCommand::execute(CommandContext &ctx) {
     return true;
   }
 
-  Client *targetClient = _serverCtx.findClientByNick(target);
+  Client* targetClient = _serverCtx.findClientByNick(target);
   if (targetClient == NULL) {
     ctx.reply(ReplyBuilder::errNoSuchNick(ctx.nick(), target));
     return true;
