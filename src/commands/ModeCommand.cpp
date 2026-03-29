@@ -119,6 +119,9 @@ bool ModeCommand::execute(CommandContext &ctx) {
       } else {
         channel->setUserLimit(0);
       }
+    } else {
+      ctx.reply(ReplyBuilder::errUnknownMode(ctx.nick(), flag, chName));
+      return true;
     }
   }
 
