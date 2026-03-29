@@ -1,4 +1,5 @@
 #include "IrcCaseMapping.hpp"
+#include <algorithm>
 #include <string>
 
 namespace IrcCaseMapping {
