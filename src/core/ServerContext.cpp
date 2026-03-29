@@ -98,7 +98,7 @@ void ServerContext::removeClientFromAllChannels(Client& client,
       channel->removeMember(client);
 
       if (channel->getMemberCount() == 0)
-        emptyChannels.push_back(it->first);
+        emptyChannels.push_back(channel->getName());
     }
   }
 
