@@ -15,15 +15,16 @@ class IRCFuzzHarness:
         port=6667,
         password="password",
         timeout=2.0,
-        server_cwd="/home/gu/cursus/fuzzing/ft_irc",
-        log_dir="/home/gu/cursus/fuzzing/logs",
+        server_cwd=None,
+        log_dir=None,
     ):
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         self.host = host
         self.port = port
         self.password = password
         self.timeout = timeout
-        self.server_cwd = server_cwd
-        self.log_dir = log_dir
+        self.server_cwd = server_cwd or project_root
+        self.log_dir = log_dir or os.path.join(project_root, "logs")
         self.server_proc = None
         self.server_log_fp = None
 
