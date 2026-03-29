@@ -20,9 +20,6 @@ private:
   ResponseSink &_responseSink;
   const std::string &_password;
 
-  static char _normalizeNickChar(char c);
-  static const std::string _normalizeNickStr(const std::string &name);
-
 public:
   typedef std::pair<Channel *, bool> ChannelSlot;
   ServerContext(std::map<int, Client *> &clients,

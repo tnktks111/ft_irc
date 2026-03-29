@@ -7,7 +7,7 @@ CXX = c++
 
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -pedantic-errors -MMD -MP
 
-INCLUDES = -I $(INC_DIR) -I $(INC_DIR)/core -I $(INC_DIR)/commands -I $(INC_DIR)/domain -I $(INC_DIR)/response
+INCLUDES = -I $(INC_DIR) -I $(INC_DIR)/core -I $(INC_DIR)/commands -I $(INC_DIR)/domain -I $(INC_DIR)/response -I $(INC_DIR)/utils
 
 SRCS = \
 	$(SRC_DIR)/app/main.cpp \
@@ -32,7 +32,8 @@ SRCS = \
 	$(SRC_DIR)/domain/Client.cpp \
 	$(SRC_DIR)/domain/Message.cpp \
 	$(SRC_DIR)/response/ReplyBuilder.cpp \
-	$(SRC_DIR)/response/ResponseSink.cpp
+	$(SRC_DIR)/response/ResponseSink.cpp \
+	$(SRC_DIR)/utils/IrcCaseMapping.cpp
 
 OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS = $(OBJS:.o=.d)
