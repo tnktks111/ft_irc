@@ -25,11 +25,23 @@ class IRCFuzzHarness:
         self.timeout = timeout
         self.server_cwd = server_cwd or project_root
         self.log_dir = log_dir or os.path.join(project_root, "logs")
+        self.server_path = os.path.join(self.server_cwd, "ircserv")
         self.server_proc = None
         self.server_log_fp = None
 
     def _slugify(self, text):
         return "".join(c.lower() if c.isalnum() else "_" for c in text).strip("_")
+
+    def _ensure_server_binary(self):
+        if os.path.isfile(self.server_path) and os.access(self.server_path, os.X_OK):
+            return
+
+        subprocess.check_call(["make"], cwd=self.server_cwd)
+
+        if not (os.path.isfile(self.server_path) and os.access(self.server_path, os.X_OK)):
+            raise FileNotFoundError(
+                f"Server binary was not created at {self.server_path} after running make"
+            )
 
     def start_server(self, test_name):
         os.makedirs(self.log_dir, exist_ok=True)
@@ -40,8 +52,10 @@ class IRCFuzzHarness:
         self.server_log_fp.write(f"[START] {datetime.now().isoformat()}\n")
         self.server_log_fp.flush()
 
+        self._ensure_server_binary()
+
         self.server_proc = subprocess.Popen(
-            ["./ircserv", str(self.port), self.password],
+            [self.server_path, str(self.port), self.password],
             cwd=self.server_cwd,
             stdout=self.server_log_fp,
             stderr=subprocess.STDOUT,
