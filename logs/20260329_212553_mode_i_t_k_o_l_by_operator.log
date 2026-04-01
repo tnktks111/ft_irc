@@ -1,0 +1,16 @@
+[TEST] MODE i/t/k/o/l by operator
+[START] 2026-03-29T21:25:53.314681
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Channel created: #mode
+[*] op53624 is now the operator of #mode
+[!] Socket error or hangup detected. Fd: 4
+[!] Socket error or hangup detected. Fd: 5
+[-] Channel deleted (no member): #mode
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T21:26:04.043324

@@ -1,0 +1,17 @@
+[TEST] KICK not on channel
+[START] 2026-03-29T22:38:49.299350
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] A new client has connected. Fd: 6
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Client(FD: 6) has successfully logged in.
+[+] Channel created: #kick3
+[*] ko29619 is now the operator of #kick3
+[!] Socket error or hangup detected. Fd: 4
+[-] Channel deleted (no member): #kick3
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T22:39:00.332439

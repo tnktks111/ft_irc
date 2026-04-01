@@ -1,0 +1,13 @@
+[TEST] KICK user not in channel
+[START] 2026-04-01T14:55:56.584980
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Channel created: #kick4
+[*] kop56890 is now the operator of #kick4
+Server shutdown...
+Server socket closed.
+[END] 2026-04-01T14:56:04.274035

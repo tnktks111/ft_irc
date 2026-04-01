@@ -1,0 +1,9 @@
+[TEST] PASS missing parameter
+[START] 2026-04-01T14:52:02.226756
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[!] Socket error or hangup detected. Fd: 4
+Server shutdown...
+Server socket closed.
+[END] 2026-04-01T14:52:04.537048

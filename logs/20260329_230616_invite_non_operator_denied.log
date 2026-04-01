@@ -1,0 +1,19 @@
+[TEST] INVITE non operator denied
+[START] 2026-03-29T23:06:16.691492
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] A new client has connected. Fd: 6
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Client(FD: 6) has successfully logged in.
+[+] Channel created: #invite2
+[*] op276998 is now the operator of #invite2
+[!] Socket error or hangup detected. Fd: 4
+[!] Socket error or hangup detected. Fd: 5
+[-] Channel deleted (no member): #invite2
+[!] Socket error or hangup detected. Fd: 6
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T23:06:29.616192

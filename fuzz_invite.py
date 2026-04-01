@@ -4,12 +4,13 @@ from fuzz_common import CRASH, EXCEPTION, FAIL, IRCFuzzHarness, PASS
 
 
 def _nick(prefix="i"):
-    return f"{prefix}{int(time.time() * 1000) % 100000}"
+    return f"{prefix[:4]}{int(time.time() * 1000) % 100000:05d}"
 
 
 def test_invite_by_operator(h):
     h.start_server("INVITE by operator")
     op = target = None
+    result = None
     try:
         op = h.new_client()
         target = h.new_client()
@@ -30,22 +31,24 @@ def test_invite_by_operator(h):
         out_op = h.drain(op)
         out_target = h.drain(target)
         ok = h.has_numeric(out_op, 341) and "INVITE" in out_target
-        return PASS if ok else FAIL
+        result = PASS if ok else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if target:
             target.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_invite_non_operator_denied(h):
     h.start_server("INVITE non operator denied")
     op = user = target = None
+    result = None
     try:
         op = h.new_client()
         user = h.new_client()
@@ -69,9 +72,9 @@ def test_invite_non_operator_denied(h):
 
         h.send_line(user, f"INVITE {target_nick} #invite2")
         out_user = h.drain(user)
-        return PASS if h.has_numeric(out_user, 482) else FAIL
+        result = PASS if h.has_numeric(out_user, 482) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
@@ -80,33 +83,37 @@ def test_invite_non_operator_denied(h):
         if target:
             target.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_invite_missing_param(h):
     h.start_server("INVITE missing parameter")
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.auth(sock, nick=_nick("im"), user="u")
         _ = h.drain(sock)
         h.send_line(sock, "INVITE")
         out = h.drain(sock)
-        return PASS if h.has_numeric(out, 461) else FAIL
+        result = PASS if h.has_numeric(out, 461) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_invite_no_such_nick(h):
     h.start_server("INVITE no such nick")
     op = None
+    result = None
     try:
         op = h.new_client()
         h.auth(op, nick=_nick("ins"), user="op")
@@ -117,20 +124,22 @@ def test_invite_no_such_nick(h):
 
         h.send_line(op, "INVITE ghost_user_404 #invns")
         out = h.drain(op)
-        return PASS if h.has_numeric(out, 401) else FAIL
+        result = PASS if h.has_numeric(out, 401) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_invite_not_on_channel(h):
     h.start_server("INVITE not on channel")
     owner = outsider = target = None
+    result = None
     try:
         owner = h.new_client()
         outsider = h.new_client()
@@ -149,9 +158,9 @@ def test_invite_not_on_channel(h):
 
         h.send_line(outsider, f"INVITE {target_nick} #inv3")
         out = h.drain(outsider)
-        return PASS if h.has_numeric(out, 442) else FAIL
+        result = PASS if h.has_numeric(out, 442) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if owner:
             owner.close()
@@ -160,13 +169,15 @@ def test_invite_not_on_channel(h):
         if target:
             target.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_invite_user_on_channel(h):
     h.start_server("INVITE user already on channel")
     op = target = None
+    result = None
     try:
         op = h.new_client()
         target = h.new_client()
@@ -183,17 +194,18 @@ def test_invite_user_on_channel(h):
 
         h.send_line(op, f"INVITE {target_nick} #inv4")
         out = h.drain(op)
-        return PASS if h.has_numeric(out, 443) else FAIL
+        result = PASS if h.has_numeric(out, 443) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if target:
             target.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def run(host="127.0.0.1", port=6667, password="password"):

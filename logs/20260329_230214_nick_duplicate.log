@@ -1,0 +1,12 @@
+[TEST] NICK duplicate
+[START] 2026-03-29T23:02:14.915172
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] Client(FD: 4) has successfully logged in.
+[+] A new client has connected. Fd: 5
+[!] Socket error or hangup detected. Fd: 4
+[!] Socket error or hangup detected. Fd: 5
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T23:02:19.426150

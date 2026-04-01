@@ -1,0 +1,16 @@
+[TEST] PRIVMSG cannot send to channel
+[START] 2026-03-29T21:23:12.942356
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Channel created: #talk2
+[*] pmm93254 is now the operator of #talk2
+[!] Socket error or hangup detected. Fd: 4
+[-] Channel deleted (no member): #talk2
+[!] Socket error or hangup detected. Fd: 5
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T21:23:21.668463

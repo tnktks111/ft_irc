@@ -1,0 +1,16 @@
+[TEST] JOIN bad key
+[START] 2026-04-01T14:49:56.693347
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Channel created: #keychan
+[*] opk97001 is now the operator of #keychan
+[!] Socket error or hangup detected. Fd: 4
+[-] Channel deleted (no member): #keychan
+[!] Socket error or hangup detected. Fd: 5
+Server shutdown...
+Server socket closed.
+[END] 2026-04-01T14:50:07.413724

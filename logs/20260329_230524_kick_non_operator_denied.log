@@ -1,0 +1,16 @@
+[TEST] KICK non operator denied
+[START] 2026-03-29T23:05:24.576685
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Channel created: #kick2
+[*] op224884 is now the operator of #kick2
+[!] Socket error or hangup detected. Fd: 4
+[!] Socket error or hangup detected. Fd: 5
+[-] Channel deleted (no member): #kick2
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T23:05:35.300375

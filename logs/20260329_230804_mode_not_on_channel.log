@@ -1,0 +1,15 @@
+[TEST] MODE not on channel
+[START] 2026-03-29T23:08:04.706406
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Channel created: #mode_noton
+[*] mo85010 is now the operator of #mode_noton
+[!] Socket error or hangup detected. Fd: 4
+[-] Channel deleted (no member): #mode_noton
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T23:08:13.420501

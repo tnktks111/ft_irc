@@ -1,0 +1,11 @@
+[TEST] GENERAL unknown command
+[START] 2026-03-29T22:43:49.904349
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] Client(FD: 4) has successfully logged in.
+Unknown command from authenticated User: THISCOMMANDDOESNOTEXIST
+[!] Socket error or hangup detected. Fd: 4
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T22:43:54.220084

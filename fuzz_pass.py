@@ -4,55 +4,62 @@ from fuzz_common import CRASH, EXCEPTION, FAIL, IRCFuzzHarness, PASS
 
 
 def _nick(prefix="u"):
-    return f"{prefix}{int(time.time() * 1000) % 100000}"
+    return f"{prefix[:4]}{int(time.time() * 1000) % 100000:05d}"
 
 
 def test_pass_missing_param(h):
     name = "PASS missing parameter"
     h.start_server(name)
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.send_line(sock, "PASS")
         out = h.drain(sock)
         if h.has_numeric(out, 461):
-            return PASS
-        return FAIL
+            result = PASS
+        else:
+            result = FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_pass_wrong_password(h):
     name = "PASS wrong password"
     h.start_server(name)
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.send_line(sock, "PASS wrong")
         out = h.drain(sock)
         if h.has_numeric(out, 464):
-            return PASS
-        return FAIL
+            result = PASS
+        else:
+            result = FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_pass_then_register(h):
     name = "PASS normal registration"
     h.start_server(name)
     sock = None
+    result = None
     try:
         sock = h.new_client()
         nick = _nick("pass")
@@ -61,22 +68,25 @@ def test_pass_then_register(h):
         h.send_line(sock, "USER test 0 * :Pass Test")
         out = h.drain(sock)
         if h.has_numeric(out, 1):
-            return PASS
-        return FAIL
+            result = PASS
+        else:
+            result = FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_pass_after_registered(h):
     name = "PASS already registered"
     h.start_server(name)
     sock = None
+    result = None
     try:
         sock = h.new_client()
         nick = _nick("passr")
@@ -85,16 +95,18 @@ def test_pass_after_registered(h):
         h.send_line(sock, f"PASS {h.password}")
         out = h.drain(sock)
         if h.has_numeric(out, 462):
-            return PASS
-        return FAIL
+            result = PASS
+        else:
+            result = FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def run(host="127.0.0.1", port=6667, password="password"):

@@ -4,6 +4,7 @@ from fuzz_common import CRASH, EXCEPTION, FAIL, IRCFuzzHarness, PASS
 def test_unknown_command(h):
     h.start_server("GENERAL unknown command")
     sock = None
+    result = None
     try:
         sock = h.new_client()
 
@@ -16,33 +17,36 @@ def test_unknown_command(h):
         # 登録後に未知コマンド
         h.send_line(sock, "THISCOMMANDDOESNOTEXIST")
         out = h.drain(sock)
-        return PASS if h.has_numeric(out, 421) else FAIL
+        result = PASS if h.has_numeric(out, 421) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_not_registered(h):
     h.start_server("GENERAL not registered")
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.send_line(sock, "JOIN #needreg")
         out = h.drain(sock)
-        return PASS if h.has_numeric(out, 451) else FAIL
+        result = PASS if h.has_numeric(out, 451) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def run(host="127.0.0.1", port=6667, password="password"):

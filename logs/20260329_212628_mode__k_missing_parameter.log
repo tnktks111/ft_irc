@@ -1,0 +1,13 @@
+[TEST] MODE +k missing parameter
+[START] 2026-03-29T21:26:28.050669
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] Client(FD: 4) has successfully logged in.
+[+] Channel created: #mode3
+[*] mk88364 is now the operator of #mode3
+[!] Socket error or hangup detected. Fd: 4
+[-] Channel deleted (no member): #mode3
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T21:26:34.571793

@@ -4,12 +4,13 @@ from fuzz_common import CRASH, EXCEPTION, FAIL, IRCFuzzHarness, PASS
 
 
 def _nick(prefix="j"):
-    return f"{prefix}{int(time.time() * 1000) % 100000}"
+    return f"{prefix[:4]}{int(time.time() * 1000) % 100000:05d}"
 
 
 def test_join_success(h):
     h.start_server("JOIN success")
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.auth(sock, nick=_nick("join"), user="u")
@@ -17,61 +18,68 @@ def test_join_success(h):
         h.send_line(sock, "JOIN #chan")
         out = h.drain(sock)
         if h.has_numeric(out, 353) and h.has_numeric(out, 366):
-            return PASS
-        return FAIL
+            result = PASS
+        else:
+            result = FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_join_missing_param(h):
     h.start_server("JOIN missing parameter")
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.auth(sock, nick=_nick("joinm"), user="u")
         _ = h.drain(sock)
         h.send_line(sock, "JOIN")
         out = h.drain(sock)
-        return PASS if h.has_numeric(out, 461) else FAIL
+        result = PASS if h.has_numeric(out, 461) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_join_no_such_channel(h):
     h.start_server("JOIN no such channel")
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.auth(sock, nick=_nick("jns"), user="u")
         _ = h.drain(sock)
         h.send_line(sock, "JOIN #definitely_missing_channel")
         out = h.drain(sock)
-        return PASS if h.has_numeric(out, 403) else FAIL
+        result = PASS if h.has_numeric(out, 403) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_join_invite_only_reject(h):
     h.start_server("JOIN +i reject without invite")
     op = user = None
+    result = None
     try:
         op = h.new_client()
         h.auth(op, nick=_nick("op"), user="op")
@@ -86,42 +94,46 @@ def test_join_invite_only_reject(h):
         _ = h.drain(user)
         h.send_line(user, "JOIN #invite")
         out = h.drain(user)
-        return PASS if h.has_numeric(out, 473) else FAIL
+        result = PASS if h.has_numeric(out, 473) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if user:
             user.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_join_bad_channel_mask(h):
     h.start_server("JOIN bad channel mask")
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.auth(sock, nick=_nick("jbm"), user="u")
         _ = h.drain(sock)
         h.send_line(sock, "JOIN not_a_channel")
         out = h.drain(sock)
-        return PASS if h.has_numeric(out, 476) else FAIL
+        result = PASS if h.has_numeric(out, 476) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_join_bad_key(h):
     h.start_server("JOIN bad key")
     op = user = None
+    result = None
     try:
         op = h.new_client()
         user = h.new_client()
@@ -137,22 +149,24 @@ def test_join_bad_key(h):
 
         h.send_line(user, "JOIN #keychan wrong")
         out = h.drain(user)
-        return PASS if h.has_numeric(out, 475) else FAIL
+        result = PASS if h.has_numeric(out, 475) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if user:
             user.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_join_channel_full(h):
     h.start_server("JOIN channel full")
     op = user = None
+    result = None
     try:
         op = h.new_client()
         user = h.new_client()
@@ -168,22 +182,24 @@ def test_join_channel_full(h):
 
         h.send_line(user, "JOIN #limit")
         out = h.drain(user)
-        return PASS if h.has_numeric(out, 471) else FAIL
+        result = PASS if h.has_numeric(out, 471) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if user:
             user.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_join_banned_from_channel(h):
     h.start_server("JOIN banned from channel")
     op = user = None
+    result = None
     try:
         op = h.new_client()
         user = h.new_client()
@@ -199,22 +215,24 @@ def test_join_banned_from_channel(h):
 
         h.send_line(user, "JOIN #banme")
         out = h.drain(user)
-        return PASS if h.has_numeric(out, 474) else FAIL
+        result = PASS if h.has_numeric(out, 474) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if user:
             user.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_join_too_many_channels(h):
     h.start_server("JOIN too many channels")
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.auth(sock, nick=_nick("jmax"), user="u")
@@ -226,15 +244,16 @@ def test_join_too_many_channels(h):
             if h.has_numeric(out, 405):
                 hit = True
                 break
-        return PASS if hit else FAIL
+        result = PASS if hit else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def run(host="127.0.0.1", port=6667, password="password"):

@@ -1,0 +1,16 @@
+[TEST] INVITE user already on channel
+[START] 2026-03-29T21:25:06.098082
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Channel created: #inv4
+[*] iop6404 is now the operator of #inv4
+[!] Socket error or hangup detected. Fd: 4
+[!] Socket error or hangup detected. Fd: 5
+[-] Channel deleted (no member): #inv4
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T21:25:16.818534

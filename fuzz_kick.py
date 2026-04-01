@@ -4,12 +4,13 @@ from fuzz_common import CRASH, EXCEPTION, FAIL, IRCFuzzHarness, PASS
 
 
 def _nick(prefix="k"):
-    return f"{prefix}{int(time.time() * 1000) % 100000}"
+    return f"{prefix[:4]}{int(time.time() * 1000) % 100000:05d}"
 
 
 def test_kick_by_operator(h):
     h.start_server("KICK by operator")
     op = user = None
+    result = None
     try:
         op = h.new_client()
         user = h.new_client()
@@ -28,22 +29,24 @@ def test_kick_by_operator(h):
 
         h.send_line(op, f"KICK #kick {user_nick} :bye")
         out_user = h.drain(user)
-        return PASS if "KICK #kick" in out_user else FAIL
+        result = PASS if "KICK #kick" in out_user else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if user:
             user.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_kick_non_operator_denied(h):
     h.start_server("KICK non operator denied")
     op = user = None
+    result = None
     try:
         op = h.new_client()
         user = h.new_client()
@@ -62,62 +65,68 @@ def test_kick_non_operator_denied(h):
 
         h.send_line(user, f"KICK #kick2 {op_nick} :nope")
         out_user = h.drain(user)
-        return PASS if h.has_numeric(out_user, 482) else FAIL
+        result = PASS if h.has_numeric(out_user, 482) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if user:
             user.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_kick_missing_param(h):
     h.start_server("KICK missing parameter")
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.auth(sock, nick=_nick("km"), user="u")
         _ = h.drain(sock)
         h.send_line(sock, "KICK #kick")
         out = h.drain(sock)
-        return PASS if h.has_numeric(out, 461) else FAIL
+        result = PASS if h.has_numeric(out, 461) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_kick_no_such_channel(h):
     h.start_server("KICK no such channel")
     sock = None
+    result = None
     try:
         sock = h.new_client()
         h.auth(sock, nick=_nick("kns"), user="u")
         _ = h.drain(sock)
         h.send_line(sock, "KICK #no_such someone")
         out = h.drain(sock)
-        return PASS if h.has_numeric(out, 403) else FAIL
+        result = PASS if h.has_numeric(out, 403) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if sock:
             sock.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_kick_not_on_channel(h):
     h.start_server("KICK not on channel")
     owner = outsider = target = None
+    result = None
     try:
         owner = h.new_client()
         outsider = h.new_client()
@@ -136,9 +145,9 @@ def test_kick_not_on_channel(h):
 
         h.send_line(outsider, f"KICK #kick3 {target_nick}")
         out = h.drain(outsider)
-        return PASS if h.has_numeric(out, 442) else FAIL
+        result = PASS if h.has_numeric(out, 442) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if owner:
             owner.close()
@@ -147,13 +156,15 @@ def test_kick_not_on_channel(h):
         if target:
             target.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def test_kick_user_not_in_channel(h):
     h.start_server("KICK user not in channel")
     op = target = None
+    result = None
     try:
         op = h.new_client()
         target = h.new_client()
@@ -168,17 +179,18 @@ def test_kick_user_not_in_channel(h):
 
         h.send_line(op, f"KICK #kick4 {target_nick}")
         out = h.drain(op)
-        return PASS if h.has_numeric(out, 441) else FAIL
+        result = PASS if h.has_numeric(out, 441) else FAIL
     except Exception:
-        return EXCEPTION
+        result = EXCEPTION
     finally:
         if op:
             op.close()
         if target:
             target.close()
         if not h.is_server_alive():
-            return CRASH
+            result = CRASH
         h.stop_server()
+    return result
 
 
 def run(host="127.0.0.1", port=6667, password="password"):

@@ -1,0 +1,16 @@
+[TEST] MODE +o user not in channel
+[START] 2026-03-29T22:50:30.320379
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] A new client has connected. Fd: 5
+[+] Client(FD: 4) has successfully logged in.
+[+] Client(FD: 5) has successfully logged in.
+[+] Channel created: #mode_not_member
+[*] mon230628 is now the operator of #mode_not_member
+[!] Socket error or hangup detected. Fd: 4
+[-] Channel deleted (no member): #mode_not_member
+[!] Socket error or hangup detected. Fd: 5
+Server shutdown...
+Server socket closed.
+[END] 2026-03-29T22:50:39.052745

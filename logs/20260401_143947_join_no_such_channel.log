@@ -1,0 +1,13 @@
+[TEST] JOIN no such channel
+[START] 2026-04-01T14:39:47.166671
+Server is ready to start.
+Server is running on port 6667...
+[+] A new client has connected. Fd: 4
+[+] Client(FD: 4) has successfully logged in.
+[+] Channel created: #definitely_missing_channel
+[*] jns87474 is now the operator of #definitely_missing_channel
+[!] Socket error or hangup detected. Fd: 4
+[-] Channel deleted (no member): #definitely_missing_channel
+Server shutdown...
+Server socket closed.
+[END] 2026-04-01T14:39:51.683655
