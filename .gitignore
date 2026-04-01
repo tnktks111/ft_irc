@@ -1,0 +1,6 @@
+__pycache__/
+fuzz_common/
+logs/
+obj/
+ircserv
+.vscode
