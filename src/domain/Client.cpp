@@ -6,6 +6,8 @@ Client::Client(int fd, const std::string& host)
       _host(host),
       _nickName(""),
       _userName(""),
+      _realName(""),
+      _mode(0),
       _recvBuffer(""),
       _sendBuffer(""),
       _isPassChecked(false),
@@ -98,6 +100,9 @@ const std::string& Client::getNickName() const {
 const std::string& Client::getUserName() const {
   return _userName;
 }
+const std::string& Client::getRealName() const {
+  return _realName;
+}
 bool Client::isPassChecked() const {
   return _isPassChecked;
 }
@@ -111,6 +116,12 @@ void Client::setNickName(const std::string& nickName) {
 }
 void Client::setUserName(const std::string& userName) {
   _userName = userName;
+}
+void Client::setRealName(const std::string& realName) {
+  _realName = realName;
+}
+void Client::addMode(UserMode mode) {
+  _mode |= static_cast<unsigned int>(mode);
 }
 void Client::setPassChecked(bool status) {
   _isPassChecked = status;

@@ -3,6 +3,17 @@
 
 #include <string>
 
+enum UserMode {
+  UMODE_NONE = 0,
+  UMODE_AWAY = 1 << 0,   // a - away
+  UMODE_INVIS = 1 << 1,  // i - invisible
+  UMODE_WALLO = 1 << 2,  // w - wallops
+  UMODE_RESTR = 1 << 3,  // r - restricted
+  UMODE_OPER = 1 << 4,   // o - global operator
+  UMODE_LOPER = 1 << 5,  // O - local operator
+  UMODE_SNICE = 1 << 6   // s - server notices
+};
+
 class Client {
  private:
   Client();
@@ -48,15 +59,17 @@ class Client {
   // Getter
   const std::string& getNickName() const;
   const std::string& getUserName() const;
+  const std::string& getRealName() const;
   bool isPassChecked() const;
   bool isRegistered() const;
 
   // Setter
   void setNickName(const std::string& nickName);
   void setUserName(const std::string& userName);
+  void setRealName(const std::string& realName);
+  void addMode(UserMode mode);
   void setPassChecked(bool status);
   void setRegistered(bool status);
-
   std::string getPrefix() const;
 };
 
