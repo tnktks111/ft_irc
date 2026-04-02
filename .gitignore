@@ -1,3 +1,8 @@
 __pycache__/
 venv/
 logs/
+fuzz_common/
+logs/
+obj/
+ircserv
+.vscode
