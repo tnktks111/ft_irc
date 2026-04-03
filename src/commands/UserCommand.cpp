@@ -1,4 +1,5 @@
 #include "UserCommand.hpp"
+#include <iostream>
 #include <sstream>
 #include "ReplyBuilder.hpp"
 
@@ -28,9 +29,9 @@ bool UserCommand::execute(CommandContext& ctx) {
     return true;
   }
 
-  std::string& userName = ctx.params()[0];
-  std::string& modeStr = ctx.params()[1];
-  std::string& realName = ctx.params()[3];
+  const std::string& userName = ctx.params()[0];
+  const std::string& modeStr = ctx.params()[1];
+  const std::string& realName = ctx.params()[3];
 
   if (Client::isValidUserName(userName) == false) {
     std::cout << "Warning: USER command skipped. (invalid username: "
