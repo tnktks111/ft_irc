@@ -3,6 +3,7 @@
 #include <cctype>
 #include <iostream>
 #include <vector>
+#include "HostCaseMapping.hpp"
 #include "IrcCaseMapping.hpp"
 #include "ReplyBuilder.hpp"
 
@@ -26,6 +27,45 @@ Client* ServerContext::findClientByNick(const std::string& nick) const {
   return NULL;
 }
 
+std::vector<Client*> ServerContext::findClientsByUserName(
+    const std::string& userName) const {
+  std::vector<Client*> result;
+
+  for (std::map<int, Client*>::const_iterator it = _clients.begin();
+       it != _clients.end(); ++it) {
+    if (it->second->getUserName() == userName)
+      result.push_back(it->second);
+  }
+  return result;
+}
+
+std::vector<Client*> ServerContext::findClientsByUserHost(
+    const std::string& userName, const std::string& host) const {
+  std::vector<Client*> result;
+
+  for (std::map<int, Client*>::const_iterator it = _clients.begin();
+       it != _clients.end(); ++it) {
+    if (it->second->getUserName() == userName &&
+        HostCaseMapping::equals(it->second->getHost(), host))
+      result.push_back(it->second);
+  }
+  return result;
+}
+
+Client* ServerContext::findClientByNickMask(const std::string& nick,
+                                            const std::string& userName,
+                                            const std::string& host) const {
+
+  for (std::map<int, Client*>::const_iterator it = _clients.begin();
+       it != _clients.end(); ++it) {
+    if (IrcCaseMapping::equals(it->second->getNickName(), nick) &&
+        it->second->getUserName() == userName &&
+        HostCaseMapping::equals(it->second->getHost(), host))
+      return it->second;
+  }
+  return NULL;
+}
+
 bool ServerContext::hasNick(const std::string& nick,
                             const Client& exceptClient) const {
   return hasNick(nick, exceptClient.getFd());
@@ -42,7 +82,8 @@ bool ServerContext::hasNick(const std::string& nick, int exceptFd) const {
 }
 
 Channel* ServerContext::findChannel(const std::string& name) const {
-  std::map<std::string, Channel*>::const_iterator it = _channels.find(IrcCaseMapping::normalize(name));
+  std::map<std::string, Channel*>::const_iterator it =
+      _channels.find(IrcCaseMapping::normalize(name));
   if (it != _channels.end())
     return it->second;
   return NULL;
@@ -62,7 +103,8 @@ ServerContext::ChannelSlot ServerContext::getOrCreateChannel(
 }
 
 void ServerContext::removeChannel(const std::string& name) {
-  std::map<std::string, Channel*>::iterator it = _channels.find(IrcCaseMapping::normalize(name));
+  std::map<std::string, Channel*>::iterator it =
+      _channels.find(IrcCaseMapping::normalize(name));
   if (it == _channels.end())
     return;
   delete it->second;

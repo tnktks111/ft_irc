@@ -13,6 +13,7 @@ SRCS = \
 	$(SRC_DIR)/app/main.cpp \
 	$(SRC_DIR)/core/CommandContext.cpp \
 	$(SRC_DIR)/core/CommandDispatcher.cpp \
+	$(SRC_DIR)/core/MsgTargetResolver.cpp \
 	$(SRC_DIR)/core/Server.cpp \
 	$(SRC_DIR)/core/ServerContext.cpp \
 	$(SRC_DIR)/commands/ACommand.cpp \
@@ -33,6 +34,7 @@ SRCS = \
 	$(SRC_DIR)/domain/Message.cpp \
 	$(SRC_DIR)/response/ReplyBuilder.cpp \
 	$(SRC_DIR)/response/ResponseSink.cpp \
+	$(SRC_DIR)/utils/HostCaseMapping.cpp \
 	$(SRC_DIR)/utils/IrcCaseMapping.cpp
 
 OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
