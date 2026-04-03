@@ -38,6 +38,7 @@ class Client {
   static bool _isDigit(char c);
   static bool _isSpecial(char c);
   static bool _isProhibittedCharInUserName(char c);
+  static bool _isShortName(const std::string& token);
 
  public:
   Client(int fd, const std::string& host);
@@ -46,6 +47,9 @@ class Client {
   // validator
   static bool isValidNickName(const std::string& token);
   static bool isValidUserName(const std::string& token);
+  static bool isValidHostName(const std::string& token);
+  static bool isValidHostAddr(const std::string& token);
+  static bool isValidHost(const std::string& token);
 
   int getFd() const;
   void appendRecvBuffer(const std::string& data);
@@ -60,6 +64,7 @@ class Client {
   const std::string& getNickName() const;
   const std::string& getUserName() const;
   const std::string& getRealName() const;
+  const std::string& getHost() const;
   bool isPassChecked() const;
   bool isRegistered() const;
 

@@ -1,5 +1,7 @@
 #include "Client.hpp"
+#include <arpa/inet.h>
 #include <unistd.h>
+#include <sstream>
 
 Client::Client(int fd, const std::string& host)
     : _fd(fd),
@@ -56,6 +58,49 @@ bool Client::isValidUserName(const std::string& token) {
   return true;
 }
 
+bool Client::_isShortName(const std::string& token) {
+  if (token.empty() || token.length() > 63)
+    return false;
+  for (std::string::const_iterator it = token.begin(); it != token.end();
+       ++it) {
+    if (!_isLetter(*it) && !_isDigit(*it) && *it != '-')
+      return false;
+  }
+  return (*token.begin() != '-' && *token.rbegin() != '-');
+}
+
+bool Client::isValidHostName(const std::string& token) {
+  if (token.empty() || token.length() > 255)
+    return false;
+  if (*token.rbegin() == '.')
+    return false;
+
+  std::istringstream iss(token);
+  std::string item;
+  while (std::getline(iss, item, '.')) {
+    if (_isShortName(item) == false)
+      return false;
+  }
+  return true;
+}
+
+bool Client::isValidHostAddr(const std::string& token) {
+  struct in_addr ipv4_addr;
+  struct in6_addr ipv6_addr;
+
+  if (inet_pton(AF_INET, token.c_str(), &ipv4_addr) == 1)
+    return true;
+
+  if (inet_pton(AF_INET6, token.c_str(), &ipv6_addr) == 1)
+    return true;
+
+  return false;
+}
+
+bool Client::isValidHost(const std::string& token) {
+  return (isValidHostName(token) || isValidHostAddr(token));
+}
+
 int Client::getFd() const {
   return _fd;
 }
@@ -102,6 +147,9 @@ const std::string& Client::getUserName() const {
 }
 const std::string& Client::getRealName() const {
   return _realName;
+}
+const std::string& Client::getHost() const {
+  return _host;
 }
 bool Client::isPassChecked() const {
   return _isPassChecked;
