@@ -173,14 +173,16 @@ def test_privmsg_too_many_targets(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "PRIVMSG channel forward": test_privmsg_channel_forward(h),
-        "PRIVMSG missing text": test_privmsg_missing_text(h),
-        "PRIVMSG no such nick": test_privmsg_no_such_nick(h),
-        "PRIVMSG no recipient": test_privmsg_no_recipient(h),
-        "PRIVMSG cannot send to channel": test_privmsg_cannot_send_to_chan(h),
-        "PRIVMSG too many targets": test_privmsg_too_many_targets(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "PRIVMSG channel forward": test_privmsg_channel_forward(h),
+            "PRIVMSG missing text": test_privmsg_missing_text(h),
+            "PRIVMSG no such nick": test_privmsg_no_such_nick(h),
+            "PRIVMSG no recipient": test_privmsg_no_recipient(h),
+            "PRIVMSG cannot send to channel": test_privmsg_cannot_send_to_chan(h),
+            "PRIVMSG too many targets": test_privmsg_too_many_targets(h),
+        }
+    )
 
 
 if __name__ == "__main__":

@@ -258,17 +258,19 @@ def test_join_too_many_channels(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "JOIN success": test_join_success(h),
-        "JOIN missing parameter": test_join_missing_param(h),
-        "JOIN no such channel": test_join_no_such_channel(h),
-        "JOIN +i reject without invite": test_join_invite_only_reject(h),
-        "JOIN bad channel mask": test_join_bad_channel_mask(h),
-        "JOIN bad key": test_join_bad_key(h),
-        "JOIN channel full": test_join_channel_full(h),
-        "JOIN banned from channel": test_join_banned_from_channel(h),
-        "JOIN too many channels": test_join_too_many_channels(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "JOIN success": test_join_success(h),
+            "JOIN missing parameter": test_join_missing_param(h),
+            "JOIN no such channel": test_join_no_such_channel(h),
+            "JOIN +i reject without invite": test_join_invite_only_reject(h),
+            "JOIN bad channel mask": test_join_bad_channel_mask(h),
+            "JOIN bad key": test_join_bad_key(h),
+            "JOIN channel full": test_join_channel_full(h),
+            "JOIN banned from channel": test_join_banned_from_channel(h),
+            "JOIN too many channels": test_join_too_many_channels(h),
+        }
+    )
 
 
 if __name__ == "__main__":

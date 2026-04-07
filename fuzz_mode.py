@@ -297,18 +297,20 @@ def test_mode_l_missing_param(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "MODE i/t/k/o/l by operator": test_mode_itkol_by_operator(h),
-        "MODE non-operator denied": test_mode_non_operator_denied(h),
-        "MODE no such channel": test_mode_no_such_channel(h),
-        "MODE not on channel": test_mode_not_on_channel(h),
-        "MODE +k missing parameter": test_mode_k_missing_param(h),
-        "MODE +k already set": test_mode_k_already_set(h),
-        "MODE +o no such nick": test_mode_o_no_such_nick(h),
-        "MODE +o user not in channel": test_mode_o_user_not_in_channel(h),
-        "MODE unknown flag": test_mode_unknown_flag(h),
-        "MODE +l missing parameter": test_mode_l_missing_param(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "MODE i/t/k/o/l by operator": test_mode_itkol_by_operator(h),
+            "MODE non-operator denied": test_mode_non_operator_denied(h),
+            "MODE no such channel": test_mode_no_such_channel(h),
+            "MODE not on channel": test_mode_not_on_channel(h),
+            "MODE +k missing parameter": test_mode_k_missing_param(h),
+            "MODE +k already set": test_mode_k_already_set(h),
+            "MODE +o no such nick": test_mode_o_no_such_nick(h),
+            "MODE +o user not in channel": test_mode_o_user_not_in_channel(h),
+            "MODE unknown flag": test_mode_unknown_flag(h),
+            "MODE +l missing parameter": test_mode_l_missing_param(h),
+        }
+    )
 
 
 if __name__ == "__main__":

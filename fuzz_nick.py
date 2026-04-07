@@ -88,11 +88,13 @@ def test_nick_erroneous(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "NICK missing parameter": test_nick_missing_param(h),
-        "NICK duplicate": test_nick_duplicate(h),
-        "NICK erroneous nickname (RFC2812)": test_nick_erroneous(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "NICK missing parameter": test_nick_missing_param(h),
+            "NICK duplicate": test_nick_duplicate(h),
+            "NICK erroneous nickname (RFC2812)": test_nick_erroneous(h),
+        }
+    )
 
 
 if __name__ == "__main__":

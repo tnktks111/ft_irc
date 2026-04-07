@@ -111,12 +111,14 @@ def test_pass_after_registered(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "PASS missing parameter": test_pass_missing_param(h),
-        "PASS wrong password": test_pass_wrong_password(h),
-        "PASS normal registration": test_pass_then_register(h),
-        "PASS already registered": test_pass_after_registered(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "PASS missing parameter": test_pass_missing_param(h),
+            "PASS wrong password": test_pass_wrong_password(h),
+            "PASS normal registration": test_pass_then_register(h),
+            "PASS already registered": test_pass_after_registered(h),
+        }
+    )
 
 
 if __name__ == "__main__":

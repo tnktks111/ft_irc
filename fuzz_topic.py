@@ -132,12 +132,14 @@ def test_topic_not_on_channel(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "TOPIC view and set": test_topic_view_and_set(h),
-        "TOPIC +t non-op denied": test_topic_t_mode_non_op_denied(h),
-        "TOPIC missing parameter": test_topic_missing_param(h),
-        "TOPIC not on channel": test_topic_not_on_channel(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "TOPIC view and set": test_topic_view_and_set(h),
+            "TOPIC +t non-op denied": test_topic_t_mode_non_op_denied(h),
+            "TOPIC missing parameter": test_topic_missing_param(h),
+            "TOPIC not on channel": test_topic_not_on_channel(h),
+        }
+    )
 
 
 if __name__ == "__main__":

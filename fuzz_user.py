@@ -53,10 +53,12 @@ def test_user_already_registered(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "USER missing parameter": test_user_missing_param(h),
-        "USER already registered": test_user_already_registered(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "USER missing parameter": test_user_missing_param(h),
+            "USER already registered": test_user_already_registered(h),
+        }
+    )
 
 
 if __name__ == "__main__":

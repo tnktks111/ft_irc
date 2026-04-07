@@ -195,14 +195,16 @@ def test_kick_user_not_in_channel(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "KICK by operator": test_kick_by_operator(h),
-        "KICK non operator denied": test_kick_non_operator_denied(h),
-        "KICK missing parameter": test_kick_missing_param(h),
-        "KICK no such channel": test_kick_no_such_channel(h),
-        "KICK not on channel": test_kick_not_on_channel(h),
-        "KICK user not in channel": test_kick_user_not_in_channel(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "KICK by operator": test_kick_by_operator(h),
+            "KICK non operator denied": test_kick_non_operator_denied(h),
+            "KICK missing parameter": test_kick_missing_param(h),
+            "KICK no such channel": test_kick_no_such_channel(h),
+            "KICK not on channel": test_kick_not_on_channel(h),
+            "KICK user not in channel": test_kick_user_not_in_channel(h),
+        }
+    )
 
 
 if __name__ == "__main__":

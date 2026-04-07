@@ -210,14 +210,16 @@ def test_invite_user_on_channel(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "INVITE by operator": test_invite_by_operator(h),
-        "INVITE non operator denied": test_invite_non_operator_denied(h),
-        "INVITE missing parameter": test_invite_missing_param(h),
-        "INVITE no such nick": test_invite_no_such_nick(h),
-        "INVITE not on channel": test_invite_not_on_channel(h),
-        "INVITE user already on channel": test_invite_user_on_channel(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "INVITE by operator": test_invite_by_operator(h),
+            "INVITE non operator denied": test_invite_non_operator_denied(h),
+            "INVITE missing parameter": test_invite_missing_param(h),
+            "INVITE no such nick": test_invite_no_such_nick(h),
+            "INVITE not on channel": test_invite_not_on_channel(h),
+            "INVITE user already on channel": test_invite_user_on_channel(h),
+        }
+    )
 
 
 if __name__ == "__main__":

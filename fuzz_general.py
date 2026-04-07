@@ -51,10 +51,12 @@ def test_not_registered(h):
 
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
-    return {
-        "GENERAL unknown command": test_unknown_command(h),
-        "GENERAL not registered": test_not_registered(h),
-    }
+    return h.apply_leak_overrides(
+        {
+            "GENERAL unknown command": test_unknown_command(h),
+            "GENERAL not registered": test_not_registered(h),
+        }
+    )
 
 
 if __name__ == "__main__":
