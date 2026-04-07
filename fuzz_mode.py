@@ -295,6 +295,241 @@ def test_mode_l_missing_param(h):
     return result
 
 
+def test_mode_missing_param(h):
+    h.start_server("MODE missing parameter")
+    sock = None
+    result = None
+    try:
+        sock = h.new_client()
+        h.auth(sock, nick=_nick("mmp"), user="u")
+        _ = h.drain(sock)
+        h.send_line(sock, "MODE")
+        out = h.drain(sock)
+        result = PASS if h.has_numeric(out, 461) else FAIL
+    except Exception:
+        result = EXCEPTION
+    finally:
+        if sock:
+            sock.close()
+        if not h.is_server_alive():
+            result = CRASH
+        h.stop_server()
+    return result
+
+
+def test_mode_o_missing_param(h):
+    h.start_server("MODE +o missing parameter")
+    sock = None
+    result = None
+    try:
+        sock = h.new_client()
+        h.auth(sock, nick=_nick("mop"), user="op")
+        _ = h.drain(sock)
+        h.send_line(sock, "JOIN #mode_o_missing")
+        _ = h.drain(sock)
+        h.send_line(sock, "MODE #mode_o_missing +o")
+        out = h.drain(sock)
+        result = PASS if h.has_numeric(out, 461) else FAIL
+    except Exception:
+        result = EXCEPTION
+    finally:
+        if sock:
+            sock.close()
+        if not h.is_server_alive():
+            result = CRASH
+        h.stop_server()
+    return result
+
+
+def test_mode_minus_o_missing_param(h):
+    h.start_server("MODE -o missing parameter")
+    sock = None
+    result = None
+    try:
+        sock = h.new_client()
+        h.auth(sock, nick=_nick("mmo"), user="op")
+        _ = h.drain(sock)
+        h.send_line(sock, "JOIN #mode_minus_o")
+        _ = h.drain(sock)
+        h.send_line(sock, "MODE #mode_minus_o -o")
+        out = h.drain(sock)
+        result = PASS if h.has_numeric(out, 461) else FAIL
+    except Exception:
+        result = EXCEPTION
+    finally:
+        if sock:
+            sock.close()
+        if not h.is_server_alive():
+            result = CRASH
+        h.stop_server()
+    return result
+
+
+def test_mode_mixed_plus_minus_parser(h):
+    h.start_server("MODE mixed + and - parser")
+    sock = None
+    result = None
+    try:
+        sock = h.new_client()
+        h.auth(sock, nick=_nick("mmx"), user="op")
+        _ = h.drain(sock)
+
+        h.send_line(sock, "JOIN #mode_mix")
+        _ = h.drain(sock)
+        h.send_line(sock, "MODE #mode_mix +k secret")
+        _ = h.drain(sock)
+        h.send_line(sock, "MODE #mode_mix +il-k 2")
+        _ = h.drain(sock)
+
+        h.send_line(sock, "MODE #mode_mix")
+        out = h.drain(sock)
+        ok = (
+            h.has_numeric(out, 324)
+            and "+il" in out
+            and " k" not in out
+            and "secret" not in out
+        )
+        result = PASS if ok else FAIL
+    except Exception:
+        result = EXCEPTION
+    finally:
+        if sock:
+            sock.close()
+        if not h.is_server_alive():
+            result = CRASH
+        h.stop_server()
+    return result
+
+
+def test_mode_remove_key_allows_join_without_key(h):
+    h.start_server("MODE -k allows JOIN without key")
+    op = user = None
+    result = None
+    try:
+        op = h.new_client()
+        user = h.new_client()
+        h.auth(op, nick=_nick("mrko"), user="op")
+        h.auth(user, nick=_nick("mrku"), user="u")
+        _ = h.drain(op)
+        _ = h.drain(user)
+
+        h.send_line(op, "JOIN #mode_rm_key")
+        _ = h.drain(op)
+        h.send_line(op, "MODE #mode_rm_key +k secret")
+        _ = h.drain(op)
+        h.send_line(op, "MODE #mode_rm_key -k")
+        _ = h.drain(op)
+
+        h.send_line(user, "JOIN #mode_rm_key")
+        out = h.drain(user)
+        ok = (
+            h.has_numeric(out, 353)
+            and h.has_numeric(out, 366)
+            and not h.has_numeric(out, 475)
+        )
+        result = PASS if ok else FAIL
+    except Exception:
+        result = EXCEPTION
+    finally:
+        if op:
+            op.close()
+        if user:
+            user.close()
+        if not h.is_server_alive():
+            result = CRASH
+        h.stop_server()
+    return result
+
+
+def test_mode_remove_limit_allows_join(h):
+    h.start_server("MODE -l allows extra JOIN")
+    op = user = None
+    result = None
+    try:
+        op = h.new_client()
+        user = h.new_client()
+        h.auth(op, nick=_nick("mrlo"), user="op")
+        h.auth(user, nick=_nick("mrlu"), user="u")
+        _ = h.drain(op)
+        _ = h.drain(user)
+
+        h.send_line(op, "JOIN #mode_rm_limit")
+        _ = h.drain(op)
+        h.send_line(op, "MODE #mode_rm_limit +l 1")
+        _ = h.drain(op)
+
+        h.send_line(user, "JOIN #mode_rm_limit")
+        out_blocked = h.drain(user)
+
+        h.send_line(op, "MODE #mode_rm_limit -l")
+        _ = h.drain(op)
+
+        h.send_line(user, "JOIN #mode_rm_limit")
+        out_ok = h.drain(user)
+
+        ok = (
+            h.has_numeric(out_blocked, 471)
+            and h.has_numeric(out_ok, 353)
+            and h.has_numeric(out_ok, 366)
+        )
+        result = PASS if ok else FAIL
+    except Exception:
+        result = EXCEPTION
+    finally:
+        if op:
+            op.close()
+        if user:
+            user.close()
+        if not h.is_server_alive():
+            result = CRASH
+        h.stop_server()
+    return result
+
+
+def test_mode_operator_grant_allows_mode_change(h):
+    h.start_server("MODE +o grant allows mode change")
+    op = user = None
+    result = None
+    try:
+        op = h.new_client()
+        user = h.new_client()
+
+        user_nick = _nick("mgru")
+        h.auth(op, nick=_nick("mgro"), user="op")
+        h.auth(user, nick=user_nick, user="u")
+        _ = h.drain(op)
+        _ = h.drain(user)
+
+        h.send_line(op, "JOIN #mode_grant")
+        h.send_line(user, "JOIN #mode_grant")
+        _ = h.drain(op)
+        _ = h.drain(user)
+
+        h.send_line(op, f"MODE #mode_grant +o {user_nick}")
+        _ = h.drain(op)
+        _ = h.drain(user)
+
+        h.send_line(user, "MODE #mode_grant +i")
+        out_user = h.drain(user)
+        out_op = h.drain(op)
+
+        ok = (not h.has_numeric(out_user, 482)) and (
+            " MODE #mode_grant +i" in out_user or " MODE #mode_grant +i" in out_op
+        )
+        result = PASS if ok else FAIL
+    except Exception:
+        result = EXCEPTION
+    finally:
+        if op:
+            op.close()
+        if user:
+            user.close()
+        if not h.is_server_alive():
+            result = CRASH
+        h.stop_server()
+    return result
+
+
 def run(host="127.0.0.1", port=6667, password="password"):
     h = IRCFuzzHarness(host=host, port=port, password=password)
     return h.apply_leak_overrides(
@@ -309,6 +544,17 @@ def run(host="127.0.0.1", port=6667, password="password"):
             "MODE +o user not in channel": test_mode_o_user_not_in_channel(h),
             "MODE unknown flag": test_mode_unknown_flag(h),
             "MODE +l missing parameter": test_mode_l_missing_param(h),
+            "MODE missing parameter": test_mode_missing_param(h),
+            "MODE +o missing parameter": test_mode_o_missing_param(h),
+            "MODE -o missing parameter": test_mode_minus_o_missing_param(h),
+            "MODE mixed + and - parser": test_mode_mixed_plus_minus_parser(h),
+            "MODE -k allows JOIN without key": test_mode_remove_key_allows_join_without_key(
+                h
+            ),
+            "MODE -l allows extra JOIN": test_mode_remove_limit_allows_join(h),
+            "MODE +o grant allows mode change": test_mode_operator_grant_allows_mode_change(
+                h
+            ),
         }
     )
 
