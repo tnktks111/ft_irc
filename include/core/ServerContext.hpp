@@ -42,6 +42,7 @@ class ServerContext {
   ChannelSlot getOrCreateChannel(const std::string& name);
   void removeChannel(const std::string& name);
   bool tryCompleteRegistration(Client& client);
+  void leaveAllChannels(Client& client);
   void removeClientFromAllChannels(Client& client, const std::string& quitMsg);
 
   ResponseSink& responseSink();

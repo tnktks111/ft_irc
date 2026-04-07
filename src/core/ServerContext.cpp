@@ -128,6 +128,30 @@ bool ServerContext::tryCompleteRegistration(Client& client) {
   return false;
 }
 
+void ServerContext::leaveAllChannels(Client& client) {
+  std::vector<std::string> emptyChannels;
+
+  for (std::map<std::string, Channel*>::iterator it = _channels.begin();
+       it != _channels.end(); ++it) {
+    Channel* channel = it->second;
+    if (channel->hasMember(client)) {
+      std::string partMsg =
+          ":" + client.getPrefix() + " PART " + channel->getName();
+      _responseSink.broadcast(*channel, partMsg);
+      channel->removeMember(client);
+
+      if (channel->getMemberCount() == 0)
+        emptyChannels.push_back(channel->getName());
+    }
+  }
+
+  for (std::vector<std::string>::iterator it = emptyChannels.begin();
+       it != emptyChannels.end(); ++it) {
+    removeChannel(*it);
+    std::cout << "[-] Channel deleted (no member): " << *it << std::endl;
+  }
+}
+
 void ServerContext::removeClientFromAllChannels(Client& client,
                                                 const std::string& quitMsg) {
   std::vector<std::string> emptyChannels;

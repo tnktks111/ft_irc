@@ -1,7 +1,29 @@
 #include "JoinCommand.hpp"
 #include <iostream>
 #include <map>
+#include <sstream>
+#include <string>
+#include <vector>
 #include "ReplyBuilder.hpp"
+
+namespace {
+std::vector<std::string> splitTargets(const std::string& rawTargets) {
+  std::vector<std::string> result;
+
+  if (rawTargets.empty())
+    return result;
+
+  std::istringstream iss(rawTargets);
+  std::string item;
+
+  while (std::getline(iss, item, ',')) {
+    result.push_back(item);
+  }
+  if (rawTargets[rawTargets.length() - 1] == ',')
+    result.push_back("");
+  return result;
+}
+}  // namespace
 
 JoinCommand::JoinCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 JoinCommand::~JoinCommand() {}
@@ -27,63 +49,69 @@ bool JoinCommand::execute(CommandContext& ctx) {
     return true;
   }
 
-  std::string chName = ctx.params()[0];
-  if (Channel::isValidChannelName(chName) == false) {
-    ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
+  if (ctx.params()[0] == "0") {
+    ctx.serverCtx().leaveAllChannels(ctx.client());
     return true;
   }
 
-  ServerContext::ChannelSlot slot = _serverCtx.getOrCreateChannel(chName);
-  Channel* channel = slot.first;
-  bool isNewChannel = slot.second;
+  std::vector<std::string> chNames = splitTargets(ctx.params()[0]);
+  std::vector<std::string> keys = (ctx.params().size() > 1)
+                                      ? splitTargets(ctx.params()[1])
+                                      : splitTargets("");
 
-  if (isNewChannel) {
-    std::cout << "[+] Channel created: " << chName << std::endl;
-  }
+  for (std::size_t idx = 0; idx != chNames.size(); ++idx) {
+    std::string chName = chNames[idx];
+    std::string key = (idx < keys.size()) ? keys[idx] : "";
 
-  if (!isNewChannel && channel->isInviteOnly() &&
-      !channel->isInvited(ctx.nick())) {
-    ctx.reply(ReplyBuilder::errInviteOnlyChan(ctx.nick(), chName));
-    return true;
-  }
-
-  if (!isNewChannel && !channel->getPassword().empty()) {
-    std::string providedKey = (ctx.params().size() > 1) ? ctx.params()[1] : "";
-    if (providedKey != channel->getPassword()) {
-      ctx.reply(ReplyBuilder::errBadChannelKey(ctx.nick(), chName));
-      return true;
+    if (Channel::isValidChannelName(chName) == false) {
+      ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
+      continue;
     }
-  }
 
-  if (!isNewChannel && channel->getUserLimit() > 0 &&
-      channel->getMemberCount() >= channel->getUserLimit()) {
-    ctx.reply(ReplyBuilder::errChannelIsFull(ctx.nick(), chName));
-    return true;
-  }
-
-  if (!channel->hasMember(ctx.client())) {
-    channel->addMember(ctx.client());
+    ServerContext::ChannelSlot slot = _serverCtx.getOrCreateChannel(chName);
+    Channel* channel = slot.first;
+    bool isNewChannel = slot.second;
 
     if (isNewChannel) {
-      channel->addOperator(ctx.client());
-      std::cout << "[*] " << ctx.nick() << " is now the operator of " << chName
-                << std::endl;
+      std::cout << "[+] Channel created: " << chName << std::endl;
+    } else {
+      if (channel->isInviteOnly() && !channel->isInvited(ctx.nick())) {
+        ctx.reply(ReplyBuilder::errInviteOnlyChan(ctx.nick(), chName));
+        continue;
+      }
+      if (channel->getUserLimit() > 0 &&
+          channel->getMemberCount() >= channel->getUserLimit()) {
+        ctx.reply(ReplyBuilder::errChannelIsFull(ctx.nick(), chName));
+        continue;
+      }
+      if (!channel->getPassword().empty() && key != channel->getPassword()) {
+        ctx.reply(ReplyBuilder::errBadChannelKey(ctx.nick(), chName));
+        continue;
+      }
     }
+    if (!channel->hasMember(ctx.client())) {
+      channel->addMember(ctx.client());
 
-    channel->removeInvite(ctx.nick());
+      if (isNewChannel) {
+        channel->addOperator(ctx.client());
+        std::cout << "[*] " << ctx.nick() << " is now the operator of "
+                  << chName << std::endl;
+      }
 
-    ctx.broadcast(*channel, ":" + ctx.prefix() + " JOIN :" + chName);
+      channel->removeInvite(ctx.nick());
 
-    if (channel->getTopic().empty())
-      ctx.reply(ReplyBuilder::rplNoTopic(ctx.nick(), chName));
-    else
-      ctx.reply(
-          ReplyBuilder::rplTopic(ctx.nick(), chName, channel->getTopic()));
+      ctx.broadcast(*channel, ":" + ctx.prefix() + " JOIN :" + chName);
 
-    ctx.reply(ReplyBuilder::rplNamReply(ctx.nick(), chName,
-                                        _generateChannelMemberStr(*channel)));
-    ctx.reply(ReplyBuilder::rplEndOfNames(ctx.nick(), chName));
+      if (channel->getTopic().empty())
+        ctx.reply(ReplyBuilder::rplNoTopic(ctx.nick(), chName));
+      else
+        ctx.reply(
+            ReplyBuilder::rplTopic(ctx.nick(), chName, channel->getTopic()));
+
+      ctx.reply(ReplyBuilder::rplNamReply(ctx.nick(), chName,
+                                          _generateChannelMemberStr(*channel)));
+      ctx.reply(ReplyBuilder::rplEndOfNames(ctx.nick(), chName));
+    }
   }
-
   return true;
 }
