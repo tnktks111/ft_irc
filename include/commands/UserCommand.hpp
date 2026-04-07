@@ -4,18 +4,21 @@
 #include "ACommand.hpp"
 #include "ServerContext.hpp"
 
+#define MODE_W (1 << 2)
+#define MODE_I (1 << 3)
+
 class UserCommand : public ACommand {
-private:
-	ServerContext &_serverCtx;
+ private:
+  ServerContext& _serverCtx;
 
-	UserCommand(const UserCommand &other);
-	UserCommand &operator=(const UserCommand &other);
+  UserCommand(const UserCommand& other);
+  UserCommand& operator=(const UserCommand& other);
 
-public:
-	UserCommand(ServerContext &serverCtx);
-	virtual ~UserCommand();
+ public:
+  UserCommand(ServerContext& serverCtx);
+  virtual ~UserCommand();
 
-	virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif
