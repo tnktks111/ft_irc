@@ -6,16 +6,16 @@
 
 class WhoisCommand : public ACommand {
  private:
-  ServerContext &_serverCtx;
+  ServerContext& _serverCtx;
 
-  WhoisCommand(const WhoisCommand &other);
-  WhoisCommand &operator=(const WhoisCommand &other);
+  WhoisCommand(const WhoisCommand& other);
+  WhoisCommand& operator=(const WhoisCommand& other);
 
  public:
-  WhoisCommand(ServerContext &serverCtx);
+  WhoisCommand(ServerContext& serverCtx);
   virtual ~WhoisCommand();
 
-  virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif

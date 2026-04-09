@@ -59,8 +59,8 @@ std::string ReplyBuilder::rplWhoisServer(const std::string& clientName,
                                          const std::string& nickName,
                                          const std::string& serverName,
                                          const std::string& serverInfo) {
-  return "312 " + clientName + " " + nickName + " " + serverName +
-         " :" + serverInfo;
+  return "312 " + clientName + " " + nickName + " " + serverName + " :" +
+         serverInfo;
 }
 
 std::string ReplyBuilder::rplWhoisChannels(const std::string& clientName,
@@ -88,8 +88,8 @@ std::string ReplyBuilder::errTooManyTargets(const std::string& clientName,
                                             const std::string& target,
                                             const std::string& errCode,
                                             const std::string& abortMsg) {
-  return "407 " + clientName + " " + target + " :" + errCode +
-    " recipients. " + abortMsg;
+  return "407 " + clientName + " " + target + " :" + errCode + " recipients. " +
+         abortMsg;
 }
 
 std::string ReplyBuilder::errUnknownCommand(const std::string& command) {

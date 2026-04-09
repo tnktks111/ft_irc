@@ -29,7 +29,7 @@ std::vector<std::string> splitTargets(const std::string& rawTargets) {
 }
 
 std::string buildChannelList(const Client& client,
-                              const std::vector<Channel*>& channels) {
+                             const std::vector<Channel*>& channels) {
   std::string list;
 
   for (std::vector<Channel*>::const_iterator it = channels.begin();
@@ -78,18 +78,17 @@ bool WhoisCommand::execute(CommandContext& ctx) {
         targetClient->getHost(), targetClient->getRealName()));
     ctx.reply(ReplyBuilder::rplWhoisServer(ctx.nick(),
                                            targetClient->getNickName(),
-                                           kWhoisServerName,
-                                           kWhoisServerInfo));
+                                           kWhoisServerName, kWhoisServerInfo));
 
     std::vector<Channel*> channels = _serverCtx.findChannelsOf(*targetClient);
     std::string channelsList = buildChannelList(*targetClient, channels);
     if (!channelsList.empty()) {
-      ctx.reply(ReplyBuilder::rplWhoisChannels(ctx.nick(),
-                                               targetClient->getNickName(),
-                                               channelsList));
+      ctx.reply(ReplyBuilder::rplWhoisChannels(
+          ctx.nick(), targetClient->getNickName(), channelsList));
     }
 
-    ctx.reply(ReplyBuilder::rplEndOfWhois(ctx.nick(), targetClient->getNickName()));
+    ctx.reply(
+        ReplyBuilder::rplEndOfWhois(ctx.nick(), targetClient->getNickName()));
   }
 
   return true;

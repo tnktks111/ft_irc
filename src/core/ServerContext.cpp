@@ -66,7 +66,8 @@ Client* ServerContext::findClientByNickMask(const std::string& nick,
   return NULL;
 }
 
-std::vector<Channel*> ServerContext::findChannelsOf(const Client& client) const {
+std::vector<Channel*> ServerContext::findChannelsOf(
+    const Client& client) const {
   std::vector<Channel*> result;
 
   for (std::map<std::string, Channel*>::const_iterator it = _channels.begin();

@@ -5,17 +5,17 @@
 #include "ServerContext.hpp"
 
 class PassCommand : public ACommand {
-private:
-	ServerContext &_serverCtx;
+ private:
+  ServerContext& _serverCtx;
 
-	PassCommand(const PassCommand &other);
-	PassCommand &operator=(const PassCommand &other);
+  PassCommand(const PassCommand& other);
+  PassCommand& operator=(const PassCommand& other);
 
-public:
-	PassCommand(ServerContext &serverCtx);
-	virtual ~PassCommand();
+ public:
+  PassCommand(ServerContext& serverCtx);
+  virtual ~PassCommand();
 
-	virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif
