@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "ResponseSink.hpp"
@@ -34,6 +35,7 @@ class ServerContext {
   Client* findClientByNickMask(const std::string& nick,
                                const std::string& userName,
                                const std::string& host) const;
+  std::vector<Channel*> findChannelsOf(const Client& client) const;
 
   bool hasNick(const std::string& nick, const Client& exceptClient) const;
   bool hasNick(const std::string& nick, int exceptFd) const;
