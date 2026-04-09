@@ -1,11 +1,11 @@
 #include "KickCommand.hpp"
-#include "ReplyBuilder.hpp"
 #include <iostream>
+#include "ReplyBuilder.hpp"
 
-KickCommand::KickCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
+KickCommand::KickCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 KickCommand::~KickCommand() {}
 
-bool KickCommand::execute(CommandContext &ctx) {
+bool KickCommand::execute(CommandContext& ctx) {
   if (ctx.params().size() < 2) {
     ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "KICK"));
     return true;
@@ -15,7 +15,7 @@ bool KickCommand::execute(CommandContext &ctx) {
   std::string targetNick = ctx.params()[1];
   std::string reason = (ctx.params().size() > 2) ? ctx.params()[2] : targetNick;
 
-  Channel *channel = _serverCtx.findChannel(chName);
+  Channel* channel = _serverCtx.findChannel(chName);
   if (channel == NULL) {
     ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
     return true;
@@ -29,15 +29,15 @@ bool KickCommand::execute(CommandContext &ctx) {
     return true;
   }
 
-  Client *targetClient = _serverCtx.findClientByNick(targetNick);
+  Client* targetClient = _serverCtx.findClientByNick(targetNick);
   if (targetClient == NULL || !channel->hasMember(*targetClient)) {
-    ctx.reply(ReplyBuilder::errUserNotInChannel(ctx.nick(), targetNick, chName));
+    ctx.reply(
+        ReplyBuilder::errUserNotInChannel(ctx.nick(), targetNick, chName));
     return true;
   }
 
-  ctx.broadcast(*channel,
-                ":" + ctx.prefix() + " KICK " + chName + " " + targetNick +
-                    " :" + reason);
+  ctx.broadcast(*channel, ":" + ctx.prefix() + " KICK " + chName + " " +
+                              targetNick + " :" + reason);
 
   channel->removeMember(*targetClient);
   if (channel->getMemberCount() == 0) {
