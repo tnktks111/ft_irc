@@ -29,6 +29,7 @@ SRCS = \
 	$(SRC_DIR)/commands/QuitCommand.cpp \
 	$(SRC_DIR)/commands/TopicCommand.cpp \
 	$(SRC_DIR)/commands/UserCommand.cpp \
+	$(SRC_DIR)/commands/WhoisCommand.cpp \
 	$(SRC_DIR)/domain/Channel.cpp \
 	$(SRC_DIR)/domain/Client.cpp \
 	$(SRC_DIR)/domain/Message.cpp \

@@ -10,6 +10,7 @@
 #include "PrivMsgCommand.hpp"
 #include "QuitCommand.hpp"
 #include "ReplyBuilder.hpp"
+#include "WhoisCommand.hpp"
 #include "TopicCommand.hpp"
 #include "UserCommand.hpp"
 #include <iostream>
@@ -28,6 +29,7 @@ CommandDispatcher::CommandDispatcher(ServerContext &serverCtx)
   _commands["INVITE"] = new InviteCommand(_serverCtx);
   _commands["MODE"] = new ModeCommand(_serverCtx);
   _commands["PING"] = new PingCommand(_serverCtx);
+  _commands["WHOIS"] = new WhoisCommand(_serverCtx);
 }
 
 CommandDispatcher::~CommandDispatcher() {
