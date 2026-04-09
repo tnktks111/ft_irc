@@ -15,7 +15,7 @@ class WhoCommand : public ACommand {
   WhoCommand(ServerContext& serverCtx);
   virtual ~WhoCommand();
 
-  bool execute(CommandContext& ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif
