@@ -45,6 +45,7 @@ class ServerContext {
   void leaveAllChannels(Client& client);
   void removeClientFromAllChannels(Client& client, const std::string& quitMsg);
 
+  const std::map<int, Client*>& getAllClients() const;
   ResponseSink& responseSink();
   const ResponseSink& responseSink() const;
   const std::string& password() const;
