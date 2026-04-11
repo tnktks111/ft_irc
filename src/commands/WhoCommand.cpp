@@ -1,8 +1,8 @@
 #include "WhoCommand.hpp"
 #include <map>
-#include "ReplyBuilder.hpp"
-#include "IrcCaseMapping.hpp"
 #include "HostCaseMapping.hpp"
+#include "IrcCaseMapping.hpp"
+#include "ReplyBuilder.hpp"
 
 WhoCommand::WhoCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 
@@ -51,8 +51,7 @@ bool WhoCommand::execute(CommandContext& ctx) {
       if (matches) {
         ctx.reply(ReplyBuilder::rplWhoReply(
             ctx.nick(), "*", client->getUserName(), client->getHost(),
-            "ircserv", client->getNickName(), "H", "0",
-            client->getRealName()));
+            "ircserv", client->getNickName(), "H", "0", client->getRealName()));
       }
     }
   }
