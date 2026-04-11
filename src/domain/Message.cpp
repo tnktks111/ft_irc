@@ -1,9 +1,11 @@
 #include "Message.hpp"
 #include <sstream>
-Message::Message(const std::string &rawMessage) { _parse(rawMessage); }
+Message::Message(const std::string& rawMessage) {
+  _parse(rawMessage);
+}
 Message::~Message() {}
 
-void Message::_parse(const std::string &rawMessage) {
+void Message::_parse(const std::string& rawMessage) {
   if (rawMessage.empty())
     return;
 
@@ -53,6 +55,12 @@ void Message::_parse(const std::string &rawMessage) {
   }
 }
 
-const std::string &Message::getPrefix() const { return _prefix; }
-const std::string &Message::getCommand() const { return _command; }
-const std::vector<std::string> &Message::getParams() const { return _params; }
+const std::string& Message::getPrefix() const {
+  return _prefix;
+}
+const std::string& Message::getCommand() const {
+  return _command;
+}
+const std::vector<std::string>& Message::getParams() const {
+  return _params;
+}

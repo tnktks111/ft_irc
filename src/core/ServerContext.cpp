@@ -186,3 +186,7 @@ const ResponseSink& ServerContext::responseSink() const {
 const std::string& ServerContext::password() const {
   return _password;
 }
+
+const std::map<int, Client*>& ServerContext::getAllClients() const {
+  return _clients;
+}

@@ -1,10 +1,11 @@
 #include "InviteCommand.hpp"
 #include "ReplyBuilder.hpp"
 
-InviteCommand::InviteCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
+InviteCommand::InviteCommand(ServerContext& serverCtx)
+    : _serverCtx(serverCtx) {}
 InviteCommand::~InviteCommand() {}
 
-bool InviteCommand::execute(CommandContext &ctx) {
+bool InviteCommand::execute(CommandContext& ctx) {
   if (ctx.params().size() < 2) {
     ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "INVITE"));
     return true;
@@ -13,7 +14,7 @@ bool InviteCommand::execute(CommandContext &ctx) {
   std::string targetNick = ctx.params()[0];
   std::string chName = ctx.params()[1];
 
-  Channel *channel = _serverCtx.findChannel(chName);
+  Channel* channel = _serverCtx.findChannel(chName);
   if (channel == NULL) {
     ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
     return true;
@@ -27,7 +28,7 @@ bool InviteCommand::execute(CommandContext &ctx) {
     return true;
   }
 
-  Client *targetClient = _serverCtx.findClientByNick(targetNick);
+  Client* targetClient = _serverCtx.findClientByNick(targetNick);
   if (targetClient == NULL) {
     ctx.reply(ReplyBuilder::errNoSuchNick(ctx.nick(), targetNick));
     return true;

@@ -1,10 +1,10 @@
-#include "Server.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "Server.hpp"
 
-bool parsePort(const std::string &portStr, int &outPort) {
+bool parsePort(const std::string& portStr, int& outPort) {
   const int portMin = 1024;
   const int portMax = 65535;
   std::istringstream iss(portStr);
@@ -17,7 +17,7 @@ bool parsePort(const std::string &portStr, int &outPort) {
   return (outPort >= portMin && outPort <= portMax);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   if (argc != 3) {
     std::cerr << "Error: Invalid number of arguments." << std::endl;
     std::cerr << "Usage: " << argv[0] << " <port> <password>" << std::endl;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     Server::setupSignalHandlers();
     Server ircServer(port, password);
     ircServer.start();
-  } catch(const std::exception& e) {
+  } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   }
