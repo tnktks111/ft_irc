@@ -1,7 +1,27 @@
 #include "ModeCommand.hpp"
 #include "ReplyBuilder.hpp"
-#include <cstdlib>
 #include <sstream>
+
+namespace {
+bool parsePositiveSize(const std::string &value, size_t &result) {
+  if (value.empty())
+    return false;
+
+  result = 0;
+  for (std::string::const_iterator it = value.begin(); it != value.end();
+       ++it) {
+    if (*it < '0' || *it > '9')
+      return false;
+
+    size_t digit = static_cast<size_t>(*it - '0');
+    if (result > (static_cast<size_t>(-1) - digit) / 10)
+      return false;
+
+    result = result * 10 + digit;
+  }
+  return result > 0;
+}
+} // namespace
 
 ModeCommand::ModeCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 ModeCommand::~ModeCommand() {}
@@ -114,7 +134,13 @@ bool ModeCommand::execute(CommandContext &ctx) {
           ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
           return true;
         }
-        channel->setUserLimit(std::atoi(ctx.params()[paramIndex].c_str()));
+        size_t limit;
+        if (!parsePositiveSize(ctx.params()[paramIndex], limit)) {
+          ctx.reply(ReplyBuilder::errInvalidModeParam(
+              ctx.nick(), chName, 'l', ctx.params()[paramIndex]));
+          return true;
+        }
+        channel->setUserLimit(limit);
         modeParams += " " + ctx.params()[paramIndex++];
       } else {
         channel->setUserLimit(0);
