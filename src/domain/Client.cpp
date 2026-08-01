@@ -110,20 +110,19 @@ void Client::appendRecvBuffer(const std::string& data) {
 }
 
 std::string Client::extractMessage() {
-  // macのncは\nしかいれてくれないので仮で
-  // あとで絶対戻すうおうおうおうおうおう
-  std::string::size_type pos = _recvBuffer.find("\n");
-  //   std::string::size_type pos = _recvBuffer.find("\r\n");
-
+  // RFC 2812: メッセージ境界は CR-LF。ただし nc など LF のみで送るクライアントも
+  // 実運用では珍しくないため、LF を境界として検出しつつ、直前の CR を除去して
+  // 両方の終端表現を受け付ける。
+  std::string::size_type pos = _recvBuffer.find('\n');
   if (pos == std::string::npos)
     return "";
 
-  std::string msg = _recvBuffer.substr(0, pos);
+  std::string::size_type msgEnd = pos;
+  if (msgEnd > 0 && _recvBuffer[msgEnd - 1] == '\r')
+    --msgEnd;
 
+  std::string msg = _recvBuffer.substr(0, msgEnd);
   _recvBuffer.erase(0, pos + 1);
-  // ここも戻すうおうおうおう
-  // _recvBuffer.erase(0, pos + 2);
-
   return msg;
 }
 
