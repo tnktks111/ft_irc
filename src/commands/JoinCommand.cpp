@@ -9,19 +9,34 @@
 JoinCommand::JoinCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 JoinCommand::~JoinCommand() {}
 
-std::string JoinCommand::_generateChannelMemberStr(const Channel& channel) {
-  std::string namesList;
+std::vector<std::string> JoinCommand::_generateChannelMemberChunks(
+    const Channel& channel, std::size_t maxChunkLen) {
+  std::vector<std::string> chunks;
+  std::string current;
   const std::map<int, Client*>& members = channel.getMembers();
 
   for (std::map<int, Client*>::const_iterator it = members.begin();
        it != members.end(); ++it) {
-    if (!namesList.empty())
-      namesList += " ";
+    // "@nick" もしくは "nick"
+    std::string name;
     if (channel.isOperator(*(it->second)))
-      namesList += "@";
-    namesList += it->second->getNickName();
+      name += "@";
+    name += it->second->getNickName();
+
+    // 追加すると maxChunkLen を超える場合は現行 chunk を確定して new chunk へ
+    std::size_t added = (current.empty() ? 0u : 1u) + name.length();
+    if (!current.empty() && current.length() + added > maxChunkLen) {
+      chunks.push_back(current);
+      current = name;
+    } else {
+      if (!current.empty())
+        current += " ";
+      current += name;
+    }
   }
-  return namesList;
+  if (!current.empty())
+    chunks.push_back(current);
+  return chunks;
 }
 
 bool JoinCommand::execute(CommandContext& ctx) {
@@ -89,8 +104,16 @@ bool JoinCommand::execute(CommandContext& ctx) {
         ctx.reply(
             ReplyBuilder::rplTopic(ctx.nick(), chName, channel->getTopic()));
 
-      ctx.reply(ReplyBuilder::rplNamReply(ctx.nick(), chName,
-                                          _generateChannelMemberStr(*channel)));
+      // 353 の trailing (":<content>") に入る安全な最大長を控えめに 400 byte
+      // とする。ResponseSink 側の 510 byte truncate に確実に収まる予算。
+      // (":ircserv " ~9 + "353 " ~4 + nick ~9 + " = " + chan ~50 + " :" = 高々
+      //  80 byte 弱 → 400 byte content で total 500 byte 未満)
+      const std::size_t MAX_NAMES_CHUNK_LEN = 400;
+      std::vector<std::string> chunks =
+          _generateChannelMemberChunks(*channel, MAX_NAMES_CHUNK_LEN);
+      for (std::size_t i = 0; i < chunks.size(); ++i) {
+        ctx.reply(ReplyBuilder::rplNamReply(ctx.nick(), chName, chunks[i]));
+      }
       ctx.reply(ReplyBuilder::rplEndOfNames(ctx.nick(), chName));
     }
   }
