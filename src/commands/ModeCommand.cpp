@@ -27,15 +27,22 @@ bool ModeCommand::execute(CommandContext &ctx) {
       modes += "i";
     if (channel->isTopicProtected())
       modes += "t";
+    // ReplyBuilder::rplChannelModeIs は modeParams が非空なら mode との
+    // 区切りに 1 スペース加える。ここでは各パラメータをスペース区切りで
+    // 連結するだけにし、leading space を付けないことで重複を避ける。
     if (!channel->getPassword().empty()) {
       modes += "k";
-      params += " " + channel->getPassword();
+      if (!params.empty())
+        params += " ";
+      params += channel->getPassword();
     }
     if (channel->getUserLimit() > 0) {
       std::ostringstream oss;
       oss << channel->getUserLimit();
       modes += "l";
-      params += " " + oss.str();
+      if (!params.empty())
+        params += " ";
+      params += oss.str();
     }
 
     ctx.reply(ReplyBuilder::rplChannelModeIs(ctx.nick(), chName, modes, params));
