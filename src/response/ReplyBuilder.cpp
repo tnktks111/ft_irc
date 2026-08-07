@@ -6,6 +6,27 @@ std::string ReplyBuilder::rplWelcome(const std::string& clientName,
          clientPrefix;
 }
 
+std::string ReplyBuilder::rplYourHost(const std::string& clientName,
+                                      const std::string& serverName,
+                                      const std::string& version) {
+  return "002 " + clientName + " :Your host is " + serverName +
+         ", running version " + version;
+}
+
+std::string ReplyBuilder::rplCreated(const std::string& clientName,
+                                     const std::string& createdAt) {
+  return "003 " + clientName + " :This server was created " + createdAt;
+}
+
+std::string ReplyBuilder::rplMyInfo(const std::string& clientName,
+                                    const std::string& serverName,
+                                    const std::string& version,
+                                    const std::string& userModes,
+                                    const std::string& channelModes) {
+  return "004 " + clientName + " " + serverName + " " + version + " " +
+         userModes + " " + channelModes;
+}
+
 std::string ReplyBuilder::rplChannelModeIs(const std::string& clientName,
                                            const std::string& channelName,
                                            const std::string& mode,

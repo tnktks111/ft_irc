@@ -1,11 +1,32 @@
 #include "ServerContext.hpp"
 #include <algorithm>
 #include <cctype>
+#include <ctime>
 #include <iostream>
 #include <vector>
 #include "HostCaseMapping.hpp"
 #include "IrcCaseMapping.hpp"
 #include "ReplyBuilder.hpp"
+
+namespace {
+// 003 RPL_CREATED で使う human-readable な起動時刻 (localtime)。
+// C++98 に std::put_time が無いため strftime に固定 buffer を使う。
+std::string formatCreatedAt() {
+  std::time_t now = std::time(NULL);
+  std::tm* tm = std::localtime(&now);
+  if (tm == NULL)
+    return std::string("unknown");
+  char buf[64];
+  std::size_t n = std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %Z", tm);
+  if (n == 0)
+    return std::string("unknown");
+  std::string result(buf, n);
+  // %Z が空展開する環境 (LC_ALL=C など) では末尾空白が残るので除去。
+  while (!result.empty() && result[result.size() - 1] == ' ')
+    result.erase(result.size() - 1);
+  return result;
+}
+}  // namespace
 
 ServerContext::ServerContext(std::map<int, Client*>& clients,
                              std::map<std::string, Channel*>& channels,
@@ -14,7 +35,8 @@ ServerContext::ServerContext(std::map<int, Client*>& clients,
     : _clients(clients),
       _channels(channels),
       _responseSink(responseSink),
-      _password(password) {}
+      _password(password),
+      _createdAt(formatCreatedAt()) {}
 
 ServerContext::~ServerContext() {}
 
@@ -118,8 +140,24 @@ bool ServerContext::tryCompleteRegistration(Client& client) {
   if (client.isPassChecked() && !client.getNickName().empty() &&
       !client.getUserName().empty()) {
     client.setRegistered(true);
-    _responseSink.reply(client, ReplyBuilder::rplWelcome(client.getNickName(),
-                                                         client.getPrefix()));
+
+    // RFC 2812 §5.1: 登録完了時は 001-004 を順に送るのが標準。
+    // (MOTD 375/372/376 は本サーバは未実装 → 送信しない、多くの client は
+    //  MOTD 無くても問題なく登録完了と解釈する)
+    const std::string& nick = client.getNickName();
+    const std::string& serverName = _responseSink.getServerName();
+    const std::string version = "0.1";
+    const std::string umodes = "iwoOars";
+    const std::string cmodes = "itklo";
+
+    _responseSink.reply(client,
+                        ReplyBuilder::rplWelcome(nick, client.getPrefix()));
+    _responseSink.reply(client,
+                        ReplyBuilder::rplYourHost(nick, serverName, version));
+    _responseSink.reply(client, ReplyBuilder::rplCreated(nick, _createdAt));
+    _responseSink.reply(
+        client, ReplyBuilder::rplMyInfo(nick, serverName, version, umodes,
+                                        cmodes));
 
     std::cout << "[+] Client(FD: " << client.getFd()
               << ") has successfully logged in." << std::endl;
@@ -185,4 +223,8 @@ const ResponseSink& ServerContext::responseSink() const {
 
 const std::string& ServerContext::password() const {
   return _password;
+}
+
+const std::string& ServerContext::createdAt() const {
+  return _createdAt;
 }
