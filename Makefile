@@ -17,6 +17,7 @@ SRCS = \
 	$(SRC_DIR)/core/Server.cpp \
 	$(SRC_DIR)/core/ServerContext.cpp \
 	$(SRC_DIR)/commands/ACommand.cpp \
+	$(SRC_DIR)/commands/CapCommand.cpp \
 	$(SRC_DIR)/commands/InviteCommand.cpp \
 	$(SRC_DIR)/commands/JoinCommand.cpp \
 	$(SRC_DIR)/commands/KickCommand.cpp \
