@@ -44,6 +44,11 @@ class ServerContext {
   bool tryCompleteRegistration(Client& client);
   void leaveAllChannels(Client& client);
   void removeClientFromAllChannels(Client& client, const std::string& quitMsg);
+  // Deliver `msg` to `client` itself and to every other member that shares
+  // at least one channel with `client`, each exactly once (deduped by fd).
+  // Used by NICK/QUIT-style notifications where the same event must be
+  // observed by anyone who "sees" this client on the network.
+  void broadcastToVisibleMembers(Client& client, const std::string& msg);
 
   ResponseSink& responseSink();
   const ResponseSink& responseSink() const;

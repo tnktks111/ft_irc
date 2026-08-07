@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cctype>
 #include <iostream>
+#include <set>
 #include <vector>
 #include "HostCaseMapping.hpp"
 #include "IrcCaseMapping.hpp"
@@ -172,6 +173,30 @@ void ServerContext::removeClientFromAllChannels(Client& client,
        it != emptyChannels.end(); ++it) {
     removeChannel(*it);
     std::cout << "[-] Channel deleted (no member): " << *it << std::endl;
+  }
+}
+
+void ServerContext::broadcastToVisibleMembers(Client& client,
+                                               const std::string& msg) {
+  std::set<int> notified;
+
+  // sender 自身にも先にエコーしておく (自身の fd をマークしてから他 channel を
+  // 走査することで、共有 channel 経由で重複配信されないようにする)。
+  _responseSink.reply(client, msg);
+  notified.insert(client.getFd());
+
+  for (std::map<std::string, Channel*>::iterator it = _channels.begin();
+       it != _channels.end(); ++it) {
+    Channel* channel = it->second;
+    if (!channel->hasMember(client))
+      continue;
+    const std::map<int, Client*>& members = channel->getMembers();
+    for (std::map<int, Client*>::const_iterator m = members.begin();
+         m != members.end(); ++m) {
+      if (notified.insert(m->first).second) {
+        _responseSink.direct(*(m->second), msg);
+      }
+    }
   }
 }
 
