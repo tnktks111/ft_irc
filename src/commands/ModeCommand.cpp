@@ -58,6 +58,9 @@ bool ModeCommand::execute(CommandContext &ctx) {
 
   // 実際に適用できた flag のみを appliedMode として蓄積し、最後に一度だけ
   // broadcast する。未知 flag に当たっても既知 flag は反映を続ける (#60)。
+  // 中断が必要な error (errKeySet / errNoSuchNick / errUserNotInChannel /
+  // errNeedMoreParams) は return true ではなく break でループを抜け、それまでに
+  // 適用済の flag を一度だけ broadcast してから return true する (#79)。
   std::string appliedMode;
   char lastAppliedSign = 0;
 
@@ -85,11 +88,11 @@ bool ModeCommand::execute(CommandContext &ctx) {
       if (adding) {
         if (ctx.params().size() <= paramIndex) {
           ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
-          return true;
+          break;
         }
         if (!channel->getPassword().empty()) {
           ctx.reply(ReplyBuilder::errKeySet(chName));
-          return true;
+          break;
         }
         channel->setPassword(ctx.params()[paramIndex]);
         modeParams += " " + ctx.params()[paramIndex++];
@@ -100,18 +103,18 @@ bool ModeCommand::execute(CommandContext &ctx) {
     } else if (flag == 'o') {
       if (ctx.params().size() <= paramIndex) {
         ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
-        return true;
+        break;
       }
       std::string targetNick = ctx.params()[paramIndex++];
       Client *targetClient = _serverCtx.findClientByNick(targetNick);
       if (targetClient == NULL) {
         ctx.reply(ReplyBuilder::errNoSuchNick(ctx.nick(), targetNick));
-        return true;
+        break;
       }
       if (!channel->hasMember(*targetClient)) {
         ctx.reply(
             ReplyBuilder::errUserNotInChannel(ctx.nick(), targetNick, chName));
-        return true;
+        break;
       }
       if (adding)
         channel->addOperator(*targetClient);
@@ -123,7 +126,7 @@ bool ModeCommand::execute(CommandContext &ctx) {
       if (adding) {
         if (ctx.params().size() <= paramIndex) {
           ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
-          return true;
+          break;
         }
         channel->setUserLimit(std::atoi(ctx.params()[paramIndex].c_str()));
         modeParams += " " + ctx.params()[paramIndex++];
