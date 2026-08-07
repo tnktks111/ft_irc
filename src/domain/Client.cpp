@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sstream>
+#include "IrcLimits.hpp"
 
 Client::Client(int fd, const std::string& host)
     : _fd(fd),
@@ -120,6 +121,12 @@ std::string Client::extractMessage() {
   std::string::size_type msgEnd = pos;
   if (msgEnd > 0 && _recvBuffer[msgEnd - 1] == '\r')
     --msgEnd;
+
+  // 過大 payload は IrcLimits::MAX_MSG_LEN で truncate (RFC 2812 §2.3)。
+  // buffer 消費自体は次の LF まで進むため、client は同じ message で
+  // stuck しない。
+  if (msgEnd > IrcLimits::MAX_MSG_LEN)
+    msgEnd = IrcLimits::MAX_MSG_LEN;
 
   std::string msg = _recvBuffer.substr(0, msgEnd);
   _recvBuffer.erase(0, pos + 1);
