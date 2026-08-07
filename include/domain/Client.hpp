@@ -73,9 +73,14 @@ class Client {
   void setUserName(const std::string& userName);
   void setRealName(const std::string& realName);
   void addMode(UserMode mode);
+  void removeMode(UserMode mode);
   void setPassChecked(bool status);
   void setRegistered(bool status);
   std::string getPrefix() const;
+
+  // User mode helpers
+  // "+iw" のように set 済み flag を並べた文字列を返す (無い場合 "+")。
+  std::string getModeString() const;
 };
 
 #endif
