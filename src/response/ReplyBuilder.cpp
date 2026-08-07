@@ -64,8 +64,9 @@ std::string ReplyBuilder::errTooManyTargets(const std::string& clientName,
     " recipients. " + abortMsg;
 }
 
-std::string ReplyBuilder::errUnknownCommand(const std::string& command) {
-  return "421 " + command + " :Unknown command";
+std::string ReplyBuilder::errUnknownCommand(const std::string& clientName,
+                                            const std::string& command) {
+  return "421 " + clientName + " " + command + " :Unknown command";
 }
 
 std::string ReplyBuilder::errCantSendToChannel(const std::string& clientName,
@@ -73,8 +74,9 @@ std::string ReplyBuilder::errCantSendToChannel(const std::string& clientName,
   return "404 " + clientName + " " + channelName + " :Cannot send to channel";
 }
 
-std::string ReplyBuilder::errNoRecipient(const std::string& command) {
-  return "411 :No recipient given (" + command + ")";
+std::string ReplyBuilder::errNoRecipient(const std::string& clientName,
+                                         const std::string& command) {
+  return "411 " + clientName + " :No recipient given (" + command + ")";
 }
 
 std::string ReplyBuilder::errNoOrigin(const std::string& clientName) {

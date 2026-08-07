@@ -8,7 +8,7 @@ PrivMsgCommand::~PrivMsgCommand() {}
 
 bool PrivMsgCommand::execute(CommandContext& ctx) {
   if (ctx.params().empty()) {
-    ctx.reply(ReplyBuilder::errNoRecipient("PRIVMSG"));
+    ctx.reply(ReplyBuilder::errNoRecipient(ctx.nick(), "PRIVMSG"));
     return true;
   }
   if (ctx.params().size() < 2 || ctx.params()[1].empty()) {
