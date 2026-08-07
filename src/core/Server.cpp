@@ -307,6 +307,11 @@ void Server::_registerClient(int clientFd, const std::string &host) {
 void Server::_disconnectClient(size_t &index, const std::string &quitMsg) {
   int fd = _pollFds[index].fd;
   _serverCtx.removeClientFromAllChannels(*_clients[fd], quitMsg);
+  // close する前に best-effort で send buffer を吐き出す。QuitCommand が積んだ
+  // ERROR :Closing Link や、直前に応答した numeric を client に届けるため。
+  // 非 blocking send の 1 回きり呼び出しなので、socket が既に死んでいれば
+  // 素通り (kernel が握りつぶす) だけで済む。
+  _flushSendBuffer(index);
   delete _clients[fd];
   _clients.erase(fd);
   _pollFds.erase(_pollFds.begin() + index);
