@@ -5,7 +5,8 @@ Channel::Channel(const std::string& name)
     : _name(name),
       _topic(""),
       _inviteOnly(false),
-      _topicProtected(true),
+      // RFC 2811 §4.2.1: channel flags default OFF; +t is opt-in via MODE.
+      _topicProtected(false),
       _password(""),
       _userLimit(0) {}
 
