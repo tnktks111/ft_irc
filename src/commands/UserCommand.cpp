@@ -34,8 +34,12 @@ bool UserCommand::execute(CommandContext& ctx) {
   const std::string& realName = ctx.params()[3];
 
   if (Client::isValidUserName(userName) == false) {
-    std::cout << "Warning: USER command skipped. (invalid username: "
-              << userName << ")" << std::endl;
+    // RFC 2812 §3.1.3 は USER 用に invalid-username 専用 numeric を定義していない。
+    // ここでは "USER の引数が受理できない" 状態を汎用的に伝える 461 を返す。
+    // (silent skip だと client は登録待ちのまま無反応で hang する)
+    ctx.reply(ReplyBuilder::errNeedMoreParams("*", "USER"));
+    std::cout << "[!] USER rejected: invalid username '" << userName
+              << "' from Fd: " << ctx.client().getFd() << std::endl;
     return true;
   }
 
