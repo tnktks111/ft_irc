@@ -35,7 +35,8 @@ SRCS = \
 	$(SRC_DIR)/response/ReplyBuilder.cpp \
 	$(SRC_DIR)/response/ResponseSink.cpp \
 	$(SRC_DIR)/utils/HostCaseMapping.cpp \
-	$(SRC_DIR)/utils/IrcCaseMapping.cpp
+	$(SRC_DIR)/utils/IrcCaseMapping.cpp \
+	$(SRC_DIR)/utils/StringUtils.cpp
 
 OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS = $(OBJS:.o=.d)
