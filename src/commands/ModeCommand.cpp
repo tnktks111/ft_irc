@@ -1,19 +1,19 @@
 #include "ModeCommand.hpp"
-#include "ReplyBuilder.hpp"
 #include <cstdlib>
 #include <sstream>
+#include "ReplyBuilder.hpp"
 
-ModeCommand::ModeCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
+ModeCommand::ModeCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 ModeCommand::~ModeCommand() {}
 
-bool ModeCommand::execute(CommandContext &ctx) {
+bool ModeCommand::execute(CommandContext& ctx) {
   if (ctx.params().empty()) {
     ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
     return true;
   }
 
   std::string chName = ctx.params()[0];
-  Channel *channel = _serverCtx.findChannel(chName);
+  Channel* channel = _serverCtx.findChannel(chName);
   if (channel == NULL) {
     ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
     return true;
@@ -38,7 +38,8 @@ bool ModeCommand::execute(CommandContext &ctx) {
       params += " " + oss.str();
     }
 
-    ctx.reply(ReplyBuilder::rplChannelModeIs(ctx.nick(), chName, modes, params));
+    ctx.reply(
+        ReplyBuilder::rplChannelModeIs(ctx.nick(), chName, modes, params));
     return true;
   }
 
@@ -93,7 +94,7 @@ bool ModeCommand::execute(CommandContext &ctx) {
         return true;
       }
       std::string targetNick = ctx.params()[paramIndex++];
-      Client *targetClient = _serverCtx.findClientByNick(targetNick);
+      Client* targetClient = _serverCtx.findClientByNick(targetNick);
       if (targetClient == NULL) {
         ctx.reply(ReplyBuilder::errNoSuchNick(ctx.nick(), targetNick));
         return true;
@@ -125,8 +126,7 @@ bool ModeCommand::execute(CommandContext &ctx) {
     }
   }
 
-  ctx.broadcast(*channel,
-                ":" + ctx.prefix() + " MODE " + chName + " " + mode +
-                    modeParams);
+  ctx.broadcast(*channel, ":" + ctx.prefix() + " MODE " + chName + " " + mode +
+                              modeParams);
   return true;
 }

@@ -46,6 +46,34 @@ std::string ReplyBuilder::rplEndOfNames(const std::string& clientName,
   return "366 " + clientName + " " + channelName + " :End of /NAMES list";
 }
 
+std::string ReplyBuilder::rplWhoisUser(const std::string& clientName,
+                                       const std::string& nickName,
+                                       const std::string& userName,
+                                       const std::string& hostName,
+                                       const std::string& realName) {
+  return "311 " + clientName + " " + nickName + " " + userName + " " +
+         hostName + " * :" + realName;
+}
+
+std::string ReplyBuilder::rplWhoisServer(const std::string& clientName,
+                                         const std::string& nickName,
+                                         const std::string& serverName,
+                                         const std::string& serverInfo) {
+  return "312 " + clientName + " " + nickName + " " + serverName + " :" +
+         serverInfo;
+}
+
+std::string ReplyBuilder::rplWhoisChannels(const std::string& clientName,
+                                           const std::string& nickName,
+                                           const std::string& channelsList) {
+  return "319 " + clientName + " " + nickName + " :" + channelsList;
+}
+
+std::string ReplyBuilder::rplEndOfWhois(const std::string& clientName,
+                                        const std::string& nickName) {
+  return "318 " + clientName + " " + nickName + " :End of /WHOIS list";
+}
+
 std::string ReplyBuilder::errNoSuchNick(const std::string& clientName,
                                         const std::string& target) {
   return "401 " + clientName + " " + target + " :No such nick/channel";
@@ -60,8 +88,8 @@ std::string ReplyBuilder::errTooManyTargets(const std::string& clientName,
                                             const std::string& target,
                                             const std::string& errCode,
                                             const std::string& abortMsg) {
-  return "407 " + clientName + " " + target + " :" + errCode +
-    " recipients. " + abortMsg;
+  return "407 " + clientName + " " + target + " :" + errCode + " recipients. " +
+         abortMsg;
 }
 
 std::string ReplyBuilder::errUnknownCommand(const std::string& command) {

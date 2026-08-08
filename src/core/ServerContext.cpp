@@ -66,6 +66,18 @@ Client* ServerContext::findClientByNickMask(const std::string& nick,
   return NULL;
 }
 
+std::vector<Channel*> ServerContext::findChannelsOf(
+    const Client& client) const {
+  std::vector<Channel*> result;
+
+  for (std::map<std::string, Channel*>::const_iterator it = _channels.begin();
+       it != _channels.end(); ++it) {
+    if (it->second->hasMember(client))
+      result.push_back(it->second);
+  }
+  return result;
+}
+
 bool ServerContext::hasNick(const std::string& nick,
                             const Client& exceptClient) const {
   return hasNick(nick, exceptClient.getFd());
