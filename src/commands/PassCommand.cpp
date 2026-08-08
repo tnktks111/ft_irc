@@ -1,10 +1,10 @@
 #include "PassCommand.hpp"
 #include "ReplyBuilder.hpp"
 
-PassCommand::PassCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
+PassCommand::PassCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 PassCommand::~PassCommand() {}
 
-bool PassCommand::execute(CommandContext &ctx) {
+bool PassCommand::execute(CommandContext& ctx) {
   if (ctx.isRegistered()) {
     ctx.reply(ReplyBuilder::errAlreadyRegistered(ctx.nick()));
     return true;

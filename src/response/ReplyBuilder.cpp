@@ -46,6 +46,22 @@ std::string ReplyBuilder::rplEndOfNames(const std::string& clientName,
   return "366 " + clientName + " " + channelName + " :End of /NAMES list";
 }
 
+std::string ReplyBuilder::rplWhoReply(
+    const std::string& clientName, const std::string& channelName,
+    const std::string& userName, const std::string& hostName,
+    const std::string& serverName, const std::string& nickName,
+    const std::string& status, const std::string& hopcount,
+    const std::string& realName) {
+  return "352 " + clientName + " " + channelName + " " + userName + " " +
+         hostName + " " + serverName + " " + nickName + " " + status + " :" +
+         hopcount + " " + realName;
+}
+
+std::string ReplyBuilder::rplEndOfWho(const std::string& clientName,
+                                      const std::string& name) {
+  return "315 " + clientName + " " + name + " :End of WHO list";
+}
+
 std::string ReplyBuilder::errNoSuchNick(const std::string& clientName,
                                         const std::string& target) {
   return "401 " + clientName + " " + target + " :No such nick/channel";
@@ -60,8 +76,8 @@ std::string ReplyBuilder::errTooManyTargets(const std::string& clientName,
                                             const std::string& target,
                                             const std::string& errCode,
                                             const std::string& abortMsg) {
-  return "407 " + clientName + " " + target + " :" + errCode +
-    " recipients. " + abortMsg;
+  return "407 " + clientName + " " + target + " :" + errCode + " recipients. " +
+         abortMsg;
 }
 
 std::string ReplyBuilder::errUnknownCommand(const std::string& command) {

@@ -7,21 +7,21 @@ class Client;
 class Channel;
 
 class ResponseSink {
-private:
-  ResponseSink(const ResponseSink &other);
-  ResponseSink &operator=(const ResponseSink &other);
+ private:
+  ResponseSink(const ResponseSink& other);
+  ResponseSink& operator=(const ResponseSink& other);
 
-  void _appendLine(Client &client, const std::string &msg);
+  void _appendLine(Client& client, const std::string& msg);
 
-public:
+ public:
   ResponseSink();
   ~ResponseSink();
 
-  void reply(Client &client, const std::string &msg);
-  void direct(Client &client, const std::string &msg);
-  void broadcast(Channel &channel, const std::string &msg);
-  void broadcastExcept(Channel &channel, const std::string &msg,
-                       Client &excludeClient);
+  void reply(Client& client, const std::string& msg);
+  void direct(Client& client, const std::string& msg);
+  void broadcast(Channel& channel, const std::string& msg);
+  void broadcastExcept(Channel& channel, const std::string& msg,
+                       Client& excludeClient);
 };
 
 #endif

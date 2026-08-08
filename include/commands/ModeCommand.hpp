@@ -5,17 +5,17 @@
 #include "ServerContext.hpp"
 
 class ModeCommand : public ACommand {
-private:
-	ServerContext &_serverCtx;
+ private:
+  ServerContext& _serverCtx;
 
-	ModeCommand(const ModeCommand &other);
-	ModeCommand &operator=(const ModeCommand &other);
+  ModeCommand(const ModeCommand& other);
+  ModeCommand& operator=(const ModeCommand& other);
 
-public:
-	ModeCommand(ServerContext &serverCtx);
-	virtual ~ModeCommand();
+ public:
+  ModeCommand(ServerContext& serverCtx);
+  virtual ~ModeCommand();
 
-	virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif

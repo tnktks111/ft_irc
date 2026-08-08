@@ -31,6 +31,14 @@ class ReplyBuilder {
                                  const std::string& namesList);
   static std::string rplEndOfNames(const std::string& clientName,
                                    const std::string& channelName);
+  static std::string rplWhoReply(
+      const std::string& clientName, const std::string& channelName,
+      const std::string& userName, const std::string& hostName,
+      const std::string& serverName, const std::string& nickName,
+      const std::string& status, const std::string& hopcount,
+      const std::string& realName);
+  static std::string rplEndOfWho(const std::string& clientName,
+                                 const std::string& name);
   static std::string errNoSuchNick(const std::string& clientName,
                                    const std::string& target);
   static std::string errNoSuchChannel(const std::string& clientName,

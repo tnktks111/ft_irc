@@ -5,17 +5,17 @@
 #include "ServerContext.hpp"
 
 class TopicCommand : public ACommand {
-private:
-	ServerContext &_serverCtx;
+ private:
+  ServerContext& _serverCtx;
 
-	TopicCommand(const TopicCommand &other);
-	TopicCommand &operator=(const TopicCommand &other);
+  TopicCommand(const TopicCommand& other);
+  TopicCommand& operator=(const TopicCommand& other);
 
-public:
-	TopicCommand(ServerContext &serverCtx);
-	virtual ~TopicCommand();
+ public:
+  TopicCommand(ServerContext& serverCtx);
+  virtual ~TopicCommand();
 
-	virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif

@@ -5,17 +5,17 @@
 #include "ServerContext.hpp"
 
 class InviteCommand : public ACommand {
-private:
-	ServerContext &_serverCtx;
+ private:
+  ServerContext& _serverCtx;
 
-	InviteCommand(const InviteCommand &other);
-	InviteCommand &operator=(const InviteCommand &other);
+  InviteCommand(const InviteCommand& other);
+  InviteCommand& operator=(const InviteCommand& other);
 
-public:
-	InviteCommand(ServerContext &serverCtx);
-	virtual ~InviteCommand();
+ public:
+  InviteCommand(ServerContext& serverCtx);
+  virtual ~InviteCommand();
 
-	virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif
