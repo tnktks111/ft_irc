@@ -70,7 +70,8 @@ class ReplyBuilder {
                                       const std::string& channelName);
   static std::string errInviteOnlyChan(const std::string& clientName,
                                        const std::string& channelName);
-  static std::string errKeySet(const std::string& channelName);
+  static std::string errKeySet(const std::string& clientName,
+                               const std::string& channelName);
   static std::string errIncorrectPassword();
 };
 
