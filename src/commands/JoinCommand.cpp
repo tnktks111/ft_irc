@@ -1,29 +1,10 @@
 #include "JoinCommand.hpp"
 #include <iostream>
 #include <map>
-#include <sstream>
 #include <string>
 #include <vector>
 #include "ReplyBuilder.hpp"
-
-namespace {
-std::vector<std::string> splitTargets(const std::string& rawTargets) {
-  std::vector<std::string> result;
-
-  if (rawTargets.empty())
-    return result;
-
-  std::istringstream iss(rawTargets);
-  std::string item;
-
-  while (std::getline(iss, item, ',')) {
-    result.push_back(item);
-  }
-  if (rawTargets[rawTargets.length() - 1] == ',')
-    result.push_back("");
-  return result;
-}
-}  // namespace
+#include "StringUtils.hpp"
 
 JoinCommand::JoinCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 JoinCommand::~JoinCommand() {}
@@ -54,10 +35,10 @@ bool JoinCommand::execute(CommandContext& ctx) {
     return true;
   }
 
-  std::vector<std::string> chNames = splitTargets(ctx.params()[0]);
-  std::vector<std::string> keys = (ctx.params().size() > 1)
-                                      ? splitTargets(ctx.params()[1])
-                                      : splitTargets("");
+  std::vector<std::string> chNames = StringUtils::split(ctx.params()[0], ',');
+  std::vector<std::string> keys =
+      (ctx.params().size() > 1) ? StringUtils::split(ctx.params()[1], ',')
+                                : std::vector<std::string>();
 
   for (std::size_t idx = 0; idx != chNames.size(); ++idx) {
     std::string chName = chNames[idx];
