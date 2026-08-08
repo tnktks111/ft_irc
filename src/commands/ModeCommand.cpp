@@ -29,13 +29,17 @@ bool ModeCommand::execute(CommandContext &ctx) {
       modes += "t";
     if (!channel->getPassword().empty()) {
       modes += "k";
-      params += " " + channel->getPassword();
+      if (!params.empty())
+        params += " ";
+      params += channel->getPassword();
     }
     if (channel->getUserLimit() > 0) {
       std::ostringstream oss;
       oss << channel->getUserLimit();
       modes += "l";
-      params += " " + oss.str();
+      if (!params.empty())
+        params += " ";
+      params += oss.str();
     }
 
     ctx.reply(ReplyBuilder::rplChannelModeIs(ctx.nick(), chName, modes, params));
