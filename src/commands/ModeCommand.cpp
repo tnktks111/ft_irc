@@ -27,9 +27,6 @@ bool ModeCommand::execute(CommandContext &ctx) {
       modes += "i";
     if (channel->isTopicProtected())
       modes += "t";
-    // ReplyBuilder::rplChannelModeIs は modeParams が非空なら mode との
-    // 区切りに 1 スペース加える。ここでは各パラメータをスペース区切りで
-    // 連結するだけにし、leading space を付けないことで重複を避ける。
     if (!channel->getPassword().empty()) {
       modes += "k";
       if (!params.empty())
