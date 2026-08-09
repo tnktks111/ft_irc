@@ -79,7 +79,6 @@ class Client {
   std::string getPrefix() const;
 
   // User mode helpers
-  // "+iw" のように set 済み flag を並べた文字列を返す (無い場合 "+")。
   std::string getModeString() const;
 };
 
