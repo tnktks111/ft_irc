@@ -56,11 +56,6 @@ bool ModeCommand::execute(CommandContext &ctx) {
   size_t paramIndex = 2;
   std::string modeParams;
 
-  // 実際に適用できた flag のみを appliedMode として蓄積し、最後に一度だけ
-  // broadcast する。未知 flag に当たっても既知 flag は反映を続ける (#60)。
-  // 中断が必要な error (errKeySet / errNoSuchNick / errUserNotInChannel /
-  // errNeedMoreParams) は return true ではなく break でループを抜け、それまでに
-  // 適用済の flag を一度だけ broadcast してから return true する (#79)。
   std::string appliedMode;
   char lastAppliedSign = 0;
 
@@ -149,7 +144,6 @@ bool ModeCommand::execute(CommandContext &ctx) {
     }
   }
 
-  // 何一つ適用できなかった (全部 unknown flag) 場合は broadcast しない。
   if (!appliedMode.empty()) {
     ctx.broadcast(*channel,
                   ":" + ctx.prefix() + " MODE " + chName + " " + appliedMode +
