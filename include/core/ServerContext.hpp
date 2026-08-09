@@ -19,8 +19,6 @@ class ServerContext {
   std::map<std::string, Channel*>& _channels;
   ResponseSink& _responseSink;
   const std::string& _password;
-  // 起動時刻を human-readable な文字列で保持し、
-  // 003 RPL_CREATED で client に返す。
   std::string _createdAt;
 
  public:
