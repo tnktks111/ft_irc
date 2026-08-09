@@ -17,13 +17,11 @@ std::vector<std::string> JoinCommand::_generateChannelMemberChunks(
 
   for (std::map<int, Client*>::const_iterator it = members.begin();
        it != members.end(); ++it) {
-    // "@nick" もしくは "nick"
     std::string name;
     if (channel.isOperator(*(it->second)))
       name += "@";
     name += it->second->getNickName();
 
-    // 追加すると maxChunkLen を超える場合は現行 chunk を確定して new chunk へ
     std::size_t added = (current.empty() ? 0u : 1u) + name.length();
     if (!current.empty() && current.length() + added > maxChunkLen) {
       chunks.push_back(current);
@@ -104,10 +102,6 @@ bool JoinCommand::execute(CommandContext& ctx) {
         ctx.reply(
             ReplyBuilder::rplTopic(ctx.nick(), chName, channel->getTopic()));
 
-      // 353 の trailing (":<content>") に入る安全な最大長を控えめに 400 byte
-      // とする。ResponseSink 側の 510 byte truncate に確実に収まる予算。
-      // (":ircserv " ~9 + "353 " ~4 + nick ~9 + " = " + chan ~50 + " :" = 高々
-      //  80 byte 弱 → 400 byte content で total 500 byte 未満)
       const std::size_t MAX_NAMES_CHUNK_LEN = 400;
       std::vector<std::string> chunks =
           _generateChannelMemberChunks(*channel, MAX_NAMES_CHUNK_LEN);
