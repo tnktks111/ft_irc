@@ -29,9 +29,6 @@ bool NickCommand::execute(CommandContext& ctx) {
 
   ctx.client().setNickName(newNick);
 
-  // 登録済 client が実際に nick を変えたときのみ通知する。
-  // 通知は本人と、共有 channel を通じて見える全 member に配信。
-  // NICK message の source は変更前の prefix を使う (RFC 2812 §3.1.2)。
   if (wasRegistered && oldNick != newNick) {
     const std::string notification =
         ":" + oldPrefix + " NICK :" + newNick;

@@ -180,8 +180,6 @@ void ServerContext::broadcastToVisibleMembers(Client& client,
                                                const std::string& msg) {
   std::set<int> notified;
 
-  // sender 自身にも先にエコーしておく (自身の fd をマークしてから他 channel を
-  // 走査することで、共有 channel 経由で重複配信されないようにする)。
   _responseSink.reply(client, msg);
   notified.insert(client.getFd());
 
