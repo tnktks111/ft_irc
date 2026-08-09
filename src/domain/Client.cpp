@@ -122,9 +122,6 @@ std::string Client::extractMessage() {
   if (msgEnd > 0 && _recvBuffer[msgEnd - 1] == '\r')
     --msgEnd;
 
-  // 過大 payload は IrcLimits::MAX_MSG_LEN で truncate (RFC 2812 §2.3)。
-  // buffer 消費自体は次の LF まで進むため、client は同じ message で
-  // stuck しない。
   if (msgEnd > IrcLimits::MAX_MSG_LEN)
     msgEnd = IrcLimits::MAX_MSG_LEN;
 
