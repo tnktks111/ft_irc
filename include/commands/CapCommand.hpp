@@ -4,9 +4,6 @@
 #include "ACommand.hpp"
 #include "ServerContext.hpp"
 
-// IRCv3 CAP handshake の最小実装。
-// 本サーバは IRCv3 拡張を一切サポートしないため、常に空 capability list を
-// 返して client の登録シーケンスを妨げないことだけを目的とする。
 class CapCommand : public ACommand {
  private:
   ServerContext &_serverCtx;
