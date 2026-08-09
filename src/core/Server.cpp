@@ -266,9 +266,6 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
     std::string rawMsg;
 
     while (_clients[clientPollFd.fd]->extractMessage(rawMsg)) {
-      // 空行 ("\r\n" 単独) は無視する。IRC プロトコル上意味を持たない上、
-      // Message parser が空 command として扱うと 421 UNKNOWN が返る等の
-      // 副作用が出るため、caller 側で silent drop する。
       if (rawMsg.empty())
         continue;
       Message msg(rawMsg);

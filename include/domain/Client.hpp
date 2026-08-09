@@ -53,11 +53,6 @@ class Client {
 
   int getFd() const;
   void appendRecvBuffer(const std::string& data);
-  // buffer から 1 メッセージ分 (次の "\n" まで) を取り出して outMsg に代入し
-  // true を返す。まだ完全な行が無ければ false を返し outMsg は触らない。
-  // 空行 (LF 単独 / CRLF 単独) の場合も true を返して空文字を代入するため、
-  // 呼び出し側は "buffer 消費完了 (false)" と "空行を消費 (true, empty)" を
-  // 区別できる (#67)。
   bool extractMessage(std::string& outMsg);
 
   // sendBuffer
