@@ -16,11 +16,8 @@ void ResponseSink::_appendLine(Client &client, const std::string &msg) {
 }
 
 void ResponseSink::reply(Client &client, const std::string &msg) {
-  // 空文字列は "空の応答" として無意味 (":ircserv \r\n" になる) ので無視。
   if (msg.empty())
     return;
-  // 既に ":" prefix を持つメッセージ (稀な pre-formatted ケース) はそのまま。
-  // それ以外の numeric 応答 / PONG / ERROR 等は ":<serverName> " を先付け。
   if (msg[0] == ':')
     _appendLine(client, msg);
   else
