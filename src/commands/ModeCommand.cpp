@@ -60,6 +60,9 @@ bool ModeCommand::execute(CommandContext &ctx) {
   size_t paramIndex = 2;
   std::string modeParams;
 
+  std::string appliedMode;
+  char lastAppliedSign = 0;
+
   for (size_t i = 0; i < mode.size(); ++i) {
     char flag = mode[i];
 
@@ -72,10 +75,14 @@ bool ModeCommand::execute(CommandContext &ctx) {
       continue;
     }
 
+    bool applied = false;
+
     if (flag == 'i') {
       channel->setInviteOnly(adding);
+      applied = true;
     } else if (flag == 't') {
       channel->setTopicProtected(adding);
+      applied = true;
     } else if (flag == 'k') {
       if (adding) {
         if (ctx.params().size() <= paramIndex) {
@@ -91,6 +98,7 @@ bool ModeCommand::execute(CommandContext &ctx) {
       } else {
         channel->setPassword("");
       }
+      applied = true;
     } else if (flag == 'o') {
       if (ctx.params().size() <= paramIndex) {
         ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
@@ -112,6 +120,7 @@ bool ModeCommand::execute(CommandContext &ctx) {
       else
         channel->removeOperator(*targetClient);
       modeParams += " " + targetNick;
+      applied = true;
     } else if (flag == 'l') {
       if (adding) {
         if (ctx.params().size() <= paramIndex) {
@@ -123,14 +132,26 @@ bool ModeCommand::execute(CommandContext &ctx) {
       } else {
         channel->setUserLimit(0);
       }
+      applied = true;
     } else {
       ctx.reply(ReplyBuilder::errUnknownMode(ctx.nick(), flag, chName));
-      return true;
+      continue;
+    }
+
+    if (applied) {
+      char sign = adding ? '+' : '-';
+      if (sign != lastAppliedSign) {
+        appliedMode += sign;
+        lastAppliedSign = sign;
+      }
+      appliedMode += flag;
     }
   }
 
-  ctx.broadcast(*channel,
-                ":" + ctx.prefix() + " MODE " + chName + " " + mode +
-                    modeParams);
+  if (!appliedMode.empty()) {
+    ctx.broadcast(*channel,
+                  ":" + ctx.prefix() + " MODE " + chName + " " + appliedMode +
+                      modeParams);
+  }
   return true;
 }
