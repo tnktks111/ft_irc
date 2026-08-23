@@ -174,6 +174,27 @@ void Client::setRealName(const std::string& realName) {
 void Client::addMode(UserMode mode) {
   _mode |= static_cast<unsigned int>(mode);
 }
+void Client::removeMode(UserMode mode) {
+  _mode &= ~static_cast<unsigned int>(mode);
+}
+std::string Client::getModeString() const {
+  std::string result = "+";
+  if (_mode & UMODE_INVIS)
+    result += "i";
+  if (_mode & UMODE_WALLO)
+    result += "w";
+  if (_mode & UMODE_OPER)
+    result += "o";
+  if (_mode & UMODE_LOPER)
+    result += "O";
+  if (_mode & UMODE_AWAY)
+    result += "a";
+  if (_mode & UMODE_RESTR)
+    result += "r";
+  if (_mode & UMODE_SNICE)
+    result += "s";
+  return result;
+}
 void Client::setPassChecked(bool status) {
   _isPassChecked = status;
 }

@@ -14,6 +14,8 @@ class ReplyBuilder {
  public:
   static std::string rplWelcome(const std::string& clientName,
                                 const std::string& clientPrefix);
+  static std::string rplUmodeIs(const std::string& clientName,
+                                const std::string& mode);
   static std::string rplYourHost(const std::string& clientName,
                                  const std::string& serverName,
                                  const std::string& version);
@@ -89,6 +91,8 @@ class ReplyBuilder {
   static std::string errKeySet(const std::string& clientName,
                                const std::string& channelName);
   static std::string errIncorrectPassword();
+  static std::string errUsersDontMatch(const std::string& clientName);
+  static std::string errUmodeUnknownFlag(const std::string& clientName);
 };
 
 #endif

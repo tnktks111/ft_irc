@@ -11,6 +11,8 @@ private:
 	ModeCommand(const ModeCommand &other);
 	ModeCommand &operator=(const ModeCommand &other);
 
+	bool _executeUserMode(CommandContext &ctx, const std::string &target);
+
 public:
 	ModeCommand(ServerContext &serverCtx);
 	virtual ~ModeCommand();
