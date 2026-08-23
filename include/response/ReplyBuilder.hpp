@@ -76,6 +76,10 @@ class ReplyBuilder {
                                       const std::string& channelName);
   static std::string errUnknownMode(const std::string& clientName, char c,
                                     const std::string& chName);
+  static std::string errInvalidModeParam(const std::string& clientName,
+                                         const std::string& channelName,
+                                         char mode,
+                                         const std::string& parameter);
   static std::string errBadChannelKey(const std::string& clientName,
                                       const std::string& channelName);
   static std::string errInviteOnlyChan(const std::string& clientName,
