@@ -19,6 +19,7 @@ class ServerContext {
   std::map<std::string, Channel*>& _channels;
   ResponseSink& _responseSink;
   const std::string& _password;
+  std::string _createdAt;
 
  public:
   typedef std::pair<Channel*, bool> ChannelSlot;
@@ -48,6 +49,7 @@ class ServerContext {
   ResponseSink& responseSink();
   const ResponseSink& responseSink() const;
   const std::string& password() const;
+  const std::string& createdAt() const;
 };
 
 #endif
