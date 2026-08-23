@@ -14,6 +14,18 @@ class ReplyBuilder {
  public:
   static std::string rplWelcome(const std::string& clientName,
                                 const std::string& clientPrefix);
+  static std::string rplUmodeIs(const std::string& clientName,
+                                const std::string& mode);
+  static std::string rplYourHost(const std::string& clientName,
+                                 const std::string& serverName,
+                                 const std::string& version);
+  static std::string rplCreated(const std::string& clientName,
+                                const std::string& createdAt);
+  static std::string rplMyInfo(const std::string& clientName,
+                               const std::string& serverName,
+                               const std::string& version,
+                               const std::string& userModes,
+                               const std::string& channelModes);
   static std::string rplChannelModeIs(const std::string& clientName,
                                       const std::string& channelName,
                                       const std::string& mode,
@@ -39,8 +51,10 @@ class ReplyBuilder {
                                        const std::string& target,
                                        const std::string& errCode,
                                        const std::string& abortMsg);
-  static std::string errUnknownCommand(const std::string& command);
-  static std::string errNoRecipient(const std::string& command);
+  static std::string errUnknownCommand(const std::string& clientName,
+                                       const std::string& command);
+  static std::string errNoRecipient(const std::string& clientName,
+                                    const std::string& command);
   static std::string errNoOrigin(const std::string& clientName);
   static std::string errNoTextToSend(const std::string& clientName);
   static std::string errNoNicknameGiven();
@@ -66,12 +80,19 @@ class ReplyBuilder {
                                       const std::string& channelName);
   static std::string errUnknownMode(const std::string& clientName, char c,
                                     const std::string& chName);
+  static std::string errInvalidModeParam(const std::string& clientName,
+                                         const std::string& channelName,
+                                         char mode,
+                                         const std::string& parameter);
   static std::string errBadChannelKey(const std::string& clientName,
                                       const std::string& channelName);
   static std::string errInviteOnlyChan(const std::string& clientName,
                                        const std::string& channelName);
-  static std::string errKeySet(const std::string& channelName);
+  static std::string errKeySet(const std::string& clientName,
+                               const std::string& channelName);
   static std::string errIncorrectPassword();
+  static std::string errUsersDontMatch(const std::string& clientName);
+  static std::string errUmodeUnknownFlag(const std::string& clientName);
 };
 
 #endif

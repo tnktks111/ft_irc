@@ -72,7 +72,7 @@ MsgTargetResolveResult MsgTargetResolver::_resolveChannelToken(
   Channel* channel = _serverCtx.findChannel(token);
 
   if (channel == NULL)
-    return MSGTARGET_RESOLVE_NO_SUCH_NICK;
+    return MSGTARGET_RESOLVE_NO_SUCH_CHANNEL;
 
   target.channel = channel;
   return MSGTARGET_RESOLVE_OK;

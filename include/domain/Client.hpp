@@ -53,7 +53,7 @@ class Client {
 
   int getFd() const;
   void appendRecvBuffer(const std::string& data);
-  std::string extractMessage();
+  bool extractMessage(std::string& outMsg);
 
   // sendBuffer
   void appendSendBuffer(const std::string& msg);
@@ -73,9 +73,13 @@ class Client {
   void setUserName(const std::string& userName);
   void setRealName(const std::string& realName);
   void addMode(UserMode mode);
+  void removeMode(UserMode mode);
   void setPassChecked(bool status);
   void setRegistered(bool status);
   std::string getPrefix() const;
+
+  // User mode helpers
+  std::string getModeString() const;
 };
 
 #endif

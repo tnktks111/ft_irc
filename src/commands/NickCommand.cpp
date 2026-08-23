@@ -23,7 +23,18 @@ bool NickCommand::execute(CommandContext& ctx) {
     return true;
   }
 
+  const bool wasRegistered = ctx.client().isRegistered();
+  const std::string oldNick = ctx.client().getNickName();
+  const std::string oldPrefix = ctx.client().getPrefix();
+
   ctx.client().setNickName(newNick);
+
+  if (wasRegistered && oldNick != newNick) {
+    const std::string notification =
+        ":" + oldPrefix + " NICK :" + newNick;
+    _serverCtx.broadcastToVisibleMembers(ctx.client(), notification);
+  }
+
   _serverCtx.tryCompleteRegistration(ctx.client());
   return true;
 }

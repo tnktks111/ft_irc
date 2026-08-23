@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sstream>
+#include "IrcLimits.hpp"
 
 Client::Client(int fd, const std::string& host)
     : _fd(fd),
@@ -109,22 +110,24 @@ void Client::appendRecvBuffer(const std::string& data) {
   _recvBuffer += data;
 }
 
-std::string Client::extractMessage() {
-  // macのncは\nしかいれてくれないので仮で
-  // あとで絶対戻すうおうおうおうおうおう
-  std::string::size_type pos = _recvBuffer.find("\n");
-  //   std::string::size_type pos = _recvBuffer.find("\r\n");
-
+bool Client::extractMessage(std::string& outMsg) {
+  // RFC 2812: メッセージ境界は CR-LF。ただし nc など LF のみで送るクライアントも
+  // 実運用では珍しくないため、LF を境界として検出しつつ、直前の CR を除去して
+  // 両方の終端表現を受け付ける。
+  std::string::size_type pos = _recvBuffer.find('\n');
   if (pos == std::string::npos)
-    return "";
+    return false;
 
-  std::string msg = _recvBuffer.substr(0, pos);
+  std::string::size_type msgEnd = pos;
+  if (msgEnd > 0 && _recvBuffer[msgEnd - 1] == '\r')
+    --msgEnd;
 
+  if (msgEnd > IrcLimits::MAX_MSG_LEN)
+    msgEnd = IrcLimits::MAX_MSG_LEN;
+
+  outMsg = _recvBuffer.substr(0, msgEnd);
   _recvBuffer.erase(0, pos + 1);
-  // ここも戻すうおうおうおう
-  // _recvBuffer.erase(0, pos + 2);
-
-  return msg;
+  return true;
 }
 
 // sendBuffer
@@ -170,6 +173,27 @@ void Client::setRealName(const std::string& realName) {
 }
 void Client::addMode(UserMode mode) {
   _mode |= static_cast<unsigned int>(mode);
+}
+void Client::removeMode(UserMode mode) {
+  _mode &= ~static_cast<unsigned int>(mode);
+}
+std::string Client::getModeString() const {
+  std::string result = "+";
+  if (_mode & UMODE_INVIS)
+    result += "i";
+  if (_mode & UMODE_WALLO)
+    result += "w";
+  if (_mode & UMODE_OPER)
+    result += "o";
+  if (_mode & UMODE_LOPER)
+    result += "O";
+  if (_mode & UMODE_AWAY)
+    result += "a";
+  if (_mode & UMODE_RESTR)
+    result += "r";
+  if (_mode & UMODE_SNICE)
+    result += "s";
+  return result;
 }
 void Client::setPassChecked(bool status) {
   _isPassChecked = status;
