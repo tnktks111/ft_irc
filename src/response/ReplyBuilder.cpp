@@ -6,6 +6,11 @@ std::string ReplyBuilder::rplWelcome(const std::string& clientName,
          clientPrefix;
 }
 
+std::string ReplyBuilder::rplUmodeIs(const std::string& clientName,
+                                     const std::string& mode) {
+  return "221 " + clientName + " " + mode;
+}
+
 std::string ReplyBuilder::rplYourHost(const std::string& clientName,
                                       const std::string& serverName,
                                       const std::string& version) {
@@ -196,4 +201,12 @@ std::string ReplyBuilder::errChanOPrivsNeeded(const std::string& clientName,
                                               const std::string& channelName) {
   return "482 " + clientName + " " + channelName +
          " :You're not channel operator";
+}
+
+std::string ReplyBuilder::errUsersDontMatch(const std::string& clientName) {
+  return "502 " + clientName + " :Cannot change mode for other users";
+}
+
+std::string ReplyBuilder::errUmodeUnknownFlag(const std::string& clientName) {
+  return "501 " + clientName + " :Unknown MODE flag";
 }

@@ -1,6 +1,7 @@
 #include "ModeCommand.hpp"
-#include "ReplyBuilder.hpp"
 #include <sstream>
+#include "IrcCaseMapping.hpp"
+#include "ReplyBuilder.hpp"
 
 namespace {
 bool parsePositiveSize(const std::string &value, size_t &result) {
@@ -26,6 +27,90 @@ bool parsePositiveSize(const std::string &value, size_t &result) {
 ModeCommand::ModeCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 ModeCommand::~ModeCommand() {}
 
+namespace {
+
+UserMode userModeFromChar(char c) {
+  switch (c) {
+    case 'i':
+      return UMODE_INVIS;
+    case 'w':
+      return UMODE_WALLO;
+    case 's':
+      return UMODE_SNICE;
+    case 'r':
+      return UMODE_RESTR;
+    case 'o':
+      return UMODE_OPER;
+    case 'O':
+      return UMODE_LOPER;
+    case 'a':
+      return UMODE_AWAY;
+    default:
+      return UMODE_NONE;
+  }
+}
+
+bool isSelfSettable(char c) {
+  return c == 'i' || c == 'w' || c == 's' || c == 'r';
+}
+
+bool isSelfUnsettable(char c) {
+  return c == 'i' || c == 'w' || c == 's' || c == 'o' || c == 'O' || c == 'a';
+}
+
+}  // namespace
+
+bool ModeCommand::_executeUserMode(CommandContext &ctx,
+                                   const std::string &target) {
+  if (!IrcCaseMapping::equals(target, ctx.nick())) {
+    ctx.reply(ReplyBuilder::errUsersDontMatch(ctx.nick()));
+    return true;
+  }
+
+  if (ctx.params().size() == 1) {
+    ctx.reply(
+        ReplyBuilder::rplUmodeIs(ctx.nick(), ctx.client().getModeString()));
+    return true;
+  }
+
+  const std::string &mode = ctx.params()[1];
+  bool adding = true;
+  bool sawUnknown = false;
+
+  for (std::size_t i = 0; i < mode.size(); ++i) {
+    char flag = mode[i];
+    if (flag == '+') {
+      adding = true;
+      continue;
+    }
+    if (flag == '-') {
+      adding = false;
+      continue;
+    }
+
+    UserMode um = userModeFromChar(flag);
+    if (um == UMODE_NONE) {
+      sawUnknown = true;
+      continue;
+    }
+
+    if (adding) {
+      if (isSelfSettable(flag))
+        ctx.client().addMode(um);
+    } else {
+      if (isSelfUnsettable(flag))
+        ctx.client().removeMode(um);
+    }
+  }
+
+  if (sawUnknown)
+    ctx.reply(ReplyBuilder::errUmodeUnknownFlag(ctx.nick()));
+
+  ctx.reply(":" + ctx.prefix() + " MODE " + ctx.nick() + " :" +
+            ctx.client().getModeString());
+  return true;
+}
+
 bool ModeCommand::execute(CommandContext &ctx) {
   if (ctx.params().empty()) {
     ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
@@ -33,6 +118,10 @@ bool ModeCommand::execute(CommandContext &ctx) {
   }
 
   std::string chName = ctx.params()[0];
+
+  if (chName.empty() || !Channel::isChannelPrefix(chName[0]))
+    return _executeUserMode(ctx, chName);
+
   Channel *channel = _serverCtx.findChannel(chName);
   if (channel == NULL) {
     ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
