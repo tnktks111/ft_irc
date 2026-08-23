@@ -46,13 +46,6 @@ std::string Server::_buildErrnoMessage(const std::string &context) {
   return oss.str();
 }
 
-std::string Server::_buildFdErrnoMessage(const std::string &context, int fd) {
-  std::ostringstream oss;
-  oss << "Error: " << context << " on Fd " << fd << " (errno = " << errno
-      << ")";
-  return oss.str();
-}
-
 // Signal Handler
 void Server::_handleSignal(int signo) {
   (void)signo;
@@ -213,14 +206,10 @@ void Server::_flushSendBuffer(size_t index) {
           send(_pollFds[index].fd, sendBuf.c_str(), sendBuf.length(), 0);
       if (bytesSent > 0) {
         client->eraseSendBuffer(bytesSent);
-      } else if (bytesSent == -1) {
-
-        if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
-
-          std::cerr << _buildFdErrnoMessage("send() failed", _pollFds[index].fd)
-                    << std::endl;
-        }
       }
+      // On error, keep the buffer and retry on the next POLLOUT; a dead
+      // socket is reported by poll() as POLLERR/POLLHUP and handled there.
+      // The subject forbids consulting errno after send().
     }
 
     if (client->getSendBuffer().empty()) {
@@ -235,11 +224,9 @@ void Server::_acceptNewConnection() {
 
   int clientFd = accept(_serverFd, (struct sockaddr *)&clientAddr, &clientLen);
   if (clientFd == -1) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
-      return;
-
-    std::string errMsg = _buildErrnoMessage("accept() failed");
-    throw std::runtime_error(errMsg);
+    // Transient failure (or fd exhaustion): keep serving and let the next
+    // POLLIN retry. The subject forbids errno-driven branching after I/O.
+    return;
   }
 
   char host[INET_ADDRSTRLEN];
@@ -279,11 +266,8 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
               << std::endl;
     return DISCONNECT;
   } else {
-    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-      return KEEP_ALIVE;
-    }
-
-    std::cerr << _buildErrnoMessage("recv() failed") << std::endl;
+    // recv() failed on a fd poll() reported readable: treat it as a
+    // disconnect. The subject forbids consulting errno after recv().
     std::cout << "[+] A client has disconnected. Fd: " << clientPollFd.fd
               << std::endl;
     return DISCONNECT;
