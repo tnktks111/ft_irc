@@ -166,6 +166,15 @@ std::string ReplyBuilder::errUnknownMode(const std::string& clientName, char c,
          " :is unknown mode char to me for " + chName;
 }
 
+std::string ReplyBuilder::errInvalidModeParam(const std::string& clientName,
+                                              const std::string& channelName,
+                                              char mode,
+                                              const std::string& parameter) {
+  return "696 " + clientName + " " + channelName + " " +
+         std::string(1, mode) + " " + parameter +
+         " :Invalid mode parameter";
+}
+
 std::string ReplyBuilder::errInviteOnlyChan(const std::string& clientName,
                                             const std::string& channelName) {
   return "473 " + clientName + " " + channelName + " :Cannot join channel (+i)";
