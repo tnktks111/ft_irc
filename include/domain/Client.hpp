@@ -53,7 +53,7 @@ class Client {
 
   int getFd() const;
   void appendRecvBuffer(const std::string& data);
-  std::string extractMessage();
+  bool extractMessage(std::string& outMsg);
 
   // sendBuffer
   void appendSendBuffer(const std::string& msg);
