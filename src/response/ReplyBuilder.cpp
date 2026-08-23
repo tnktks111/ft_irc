@@ -11,6 +11,27 @@ std::string ReplyBuilder::rplUmodeIs(const std::string& clientName,
   return "221 " + clientName + " " + mode;
 }
 
+std::string ReplyBuilder::rplYourHost(const std::string& clientName,
+                                      const std::string& serverName,
+                                      const std::string& version) {
+  return "002 " + clientName + " :Your host is " + serverName +
+         ", running version " + version;
+}
+
+std::string ReplyBuilder::rplCreated(const std::string& clientName,
+                                     const std::string& createdAt) {
+  return "003 " + clientName + " :This server was created " + createdAt;
+}
+
+std::string ReplyBuilder::rplMyInfo(const std::string& clientName,
+                                    const std::string& serverName,
+                                    const std::string& version,
+                                    const std::string& userModes,
+                                    const std::string& channelModes) {
+  return "004 " + clientName + " " + serverName + " " + version + " " +
+         userModes + " " + channelModes;
+}
+
 std::string ReplyBuilder::rplChannelModeIs(const std::string& clientName,
                                            const std::string& channelName,
                                            const std::string& mode,
@@ -69,8 +90,9 @@ std::string ReplyBuilder::errTooManyTargets(const std::string& clientName,
     " recipients. " + abortMsg;
 }
 
-std::string ReplyBuilder::errUnknownCommand(const std::string& command) {
-  return "421 " + command + " :Unknown command";
+std::string ReplyBuilder::errUnknownCommand(const std::string& clientName,
+                                            const std::string& command) {
+  return "421 " + clientName + " " + command + " :Unknown command";
 }
 
 std::string ReplyBuilder::errCantSendToChannel(const std::string& clientName,
@@ -78,8 +100,9 @@ std::string ReplyBuilder::errCantSendToChannel(const std::string& clientName,
   return "404 " + clientName + " " + channelName + " :Cannot send to channel";
 }
 
-std::string ReplyBuilder::errNoRecipient(const std::string& command) {
-  return "411 :No recipient given (" + command + ")";
+std::string ReplyBuilder::errNoRecipient(const std::string& clientName,
+                                         const std::string& command) {
+  return "411 " + clientName + " :No recipient given (" + command + ")";
 }
 
 std::string ReplyBuilder::errNoOrigin(const std::string& clientName) {
@@ -150,6 +173,15 @@ std::string ReplyBuilder::errUnknownMode(const std::string& clientName, char c,
          " :is unknown mode char to me for " + chName;
 }
 
+std::string ReplyBuilder::errInvalidModeParam(const std::string& clientName,
+                                              const std::string& channelName,
+                                              char mode,
+                                              const std::string& parameter) {
+  return "696 " + clientName + " " + channelName + " " +
+         std::string(1, mode) + " " + parameter +
+         " :Invalid mode parameter";
+}
+
 std::string ReplyBuilder::errInviteOnlyChan(const std::string& clientName,
                                             const std::string& channelName) {
   return "473 " + clientName + " " + channelName + " :Cannot join channel (+i)";
@@ -160,8 +192,9 @@ std::string ReplyBuilder::errBadChannelKey(const std::string& clientName,
   return "475 " + clientName + " " + channelName + " :Cannot join channel (+k)";
 }
 
-std::string ReplyBuilder::errKeySet(const std::string& channelName) {
-  return "467 " + channelName + " :Channel key already set";
+std::string ReplyBuilder::errKeySet(const std::string& clientName,
+                                    const std::string& channelName) {
+  return "467 " + clientName + " " + channelName + " :Channel key already set";
 }
 
 std::string ReplyBuilder::errChanOPrivsNeeded(const std::string& clientName,

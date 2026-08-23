@@ -17,6 +17,7 @@ SRCS = \
 	$(SRC_DIR)/core/Server.cpp \
 	$(SRC_DIR)/core/ServerContext.cpp \
 	$(SRC_DIR)/commands/ACommand.cpp \
+	$(SRC_DIR)/commands/CapCommand.cpp \
 	$(SRC_DIR)/commands/InviteCommand.cpp \
 	$(SRC_DIR)/commands/JoinCommand.cpp \
 	$(SRC_DIR)/commands/KickCommand.cpp \
@@ -35,7 +36,8 @@ SRCS = \
 	$(SRC_DIR)/response/ReplyBuilder.cpp \
 	$(SRC_DIR)/response/ResponseSink.cpp \
 	$(SRC_DIR)/utils/HostCaseMapping.cpp \
-	$(SRC_DIR)/utils/IrcCaseMapping.cpp
+	$(SRC_DIR)/utils/IrcCaseMapping.cpp \
+	$(SRC_DIR)/utils/StringUtils.cpp
 
 OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS = $(OBJS:.o=.d)
@@ -55,7 +57,9 @@ clean:
 fclean: clean
 	rm -f $(NAME)
 
-re: fclean all
+re:
+	$(MAKE) fclean
+	$(MAKE) all
 
 fmt:
 	@echo "Formatting code..."

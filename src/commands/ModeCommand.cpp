@@ -1,8 +1,28 @@
 #include "ModeCommand.hpp"
-#include <cstdlib>
 #include <sstream>
 #include "IrcCaseMapping.hpp"
 #include "ReplyBuilder.hpp"
+
+namespace {
+bool parsePositiveSize(const std::string &value, size_t &result) {
+  if (value.empty())
+    return false;
+
+  result = 0;
+  for (std::string::const_iterator it = value.begin(); it != value.end();
+       ++it) {
+    if (*it < '0' || *it > '9')
+      return false;
+
+    size_t digit = static_cast<size_t>(*it - '0');
+    if (result > (static_cast<size_t>(-1) - digit) / 10)
+      return false;
+
+    result = result * 10 + digit;
+  }
+  return result > 0;
+}
+} // namespace
 
 ModeCommand::ModeCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
 ModeCommand::~ModeCommand() {}
@@ -118,13 +138,17 @@ bool ModeCommand::execute(CommandContext &ctx) {
       modes += "t";
     if (!channel->getPassword().empty()) {
       modes += "k";
-      params += " " + channel->getPassword();
+      if (!params.empty())
+        params += " ";
+      params += channel->getPassword();
     }
     if (channel->getUserLimit() > 0) {
       std::ostringstream oss;
       oss << channel->getUserLimit();
       modes += "l";
-      params += " " + oss.str();
+      if (!params.empty())
+        params += " ";
+      params += oss.str();
     }
 
     ctx.reply(ReplyBuilder::rplChannelModeIs(ctx.nick(), chName, modes, params));
@@ -145,6 +169,9 @@ bool ModeCommand::execute(CommandContext &ctx) {
   size_t paramIndex = 2;
   std::string modeParams;
 
+  std::string appliedMode;
+  char lastAppliedSign = 0;
+
   for (size_t i = 0; i < mode.size(); ++i) {
     char flag = mode[i];
 
@@ -157,10 +184,14 @@ bool ModeCommand::execute(CommandContext &ctx) {
       continue;
     }
 
+    bool applied = false;
+
     if (flag == 'i') {
       channel->setInviteOnly(adding);
+      applied = true;
     } else if (flag == 't') {
       channel->setTopicProtected(adding);
+      applied = true;
     } else if (flag == 'k') {
       if (adding) {
         if (ctx.params().size() <= paramIndex) {
@@ -168,7 +199,7 @@ bool ModeCommand::execute(CommandContext &ctx) {
           return true;
         }
         if (!channel->getPassword().empty()) {
-          ctx.reply(ReplyBuilder::errKeySet(chName));
+          ctx.reply(ReplyBuilder::errKeySet(ctx.nick(), chName));
           return true;
         }
         channel->setPassword(ctx.params()[paramIndex]);
@@ -176,6 +207,7 @@ bool ModeCommand::execute(CommandContext &ctx) {
       } else {
         channel->setPassword("");
       }
+      applied = true;
     } else if (flag == 'o') {
       if (ctx.params().size() <= paramIndex) {
         ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
@@ -197,25 +229,44 @@ bool ModeCommand::execute(CommandContext &ctx) {
       else
         channel->removeOperator(*targetClient);
       modeParams += " " + targetNick;
+      applied = true;
     } else if (flag == 'l') {
       if (adding) {
         if (ctx.params().size() <= paramIndex) {
           ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
           return true;
         }
-        channel->setUserLimit(std::atoi(ctx.params()[paramIndex].c_str()));
+        size_t limit;
+        if (!parsePositiveSize(ctx.params()[paramIndex], limit)) {
+          ctx.reply(ReplyBuilder::errInvalidModeParam(
+              ctx.nick(), chName, 'l', ctx.params()[paramIndex]));
+          return true;
+        }
+        channel->setUserLimit(limit);
         modeParams += " " + ctx.params()[paramIndex++];
       } else {
         channel->setUserLimit(0);
       }
+      applied = true;
     } else {
       ctx.reply(ReplyBuilder::errUnknownMode(ctx.nick(), flag, chName));
-      return true;
+      continue;
+    }
+
+    if (applied) {
+      char sign = adding ? '+' : '-';
+      if (sign != lastAppliedSign) {
+        appliedMode += sign;
+        lastAppliedSign = sign;
+      }
+      appliedMode += flag;
     }
   }
 
-  ctx.broadcast(*channel,
-                ":" + ctx.prefix() + " MODE " + chName + " " + mode +
-                    modeParams);
+  if (!appliedMode.empty()) {
+    ctx.broadcast(*channel,
+                  ":" + ctx.prefix() + " MODE " + chName + " " + appliedMode +
+                      modeParams);
+  }
   return true;
 }

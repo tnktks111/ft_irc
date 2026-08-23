@@ -265,7 +265,9 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
 
     std::string rawMsg;
 
-    while ((rawMsg = _clients[clientPollFd.fd]->extractMessage()) != "") {
+    while (_clients[clientPollFd.fd]->extractMessage(rawMsg)) {
+      if (rawMsg.empty())
+        continue;
       Message msg(rawMsg);
       if (!_executeCommand(_clients[clientPollFd.fd], msg)) {
         return DISCONNECT;
