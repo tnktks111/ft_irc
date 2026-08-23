@@ -14,6 +14,16 @@ class ReplyBuilder {
  public:
   static std::string rplWelcome(const std::string& clientName,
                                 const std::string& clientPrefix);
+  static std::string rplYourHost(const std::string& clientName,
+                                 const std::string& serverName,
+                                 const std::string& version);
+  static std::string rplCreated(const std::string& clientName,
+                                const std::string& createdAt);
+  static std::string rplMyInfo(const std::string& clientName,
+                               const std::string& serverName,
+                               const std::string& version,
+                               const std::string& userModes,
+                               const std::string& channelModes);
   static std::string rplChannelModeIs(const std::string& clientName,
                                       const std::string& channelName,
                                       const std::string& mode,

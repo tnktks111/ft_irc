@@ -3,8 +3,14 @@
 #include "Client.hpp"
 #include "IrcLimits.hpp"
 
-ResponseSink::ResponseSink() {}
+ResponseSink::ResponseSink() : _serverName("ircserv") {}
+ResponseSink::ResponseSink(const std::string &serverName)
+    : _serverName(serverName) {}
 ResponseSink::~ResponseSink() {}
+
+const std::string &ResponseSink::getServerName() const {
+  return _serverName;
+}
 
 void ResponseSink::_appendLine(Client &client, const std::string &msg) {
   if (msg.length() > IrcLimits::MAX_MSG_LEN)
@@ -14,7 +20,12 @@ void ResponseSink::_appendLine(Client &client, const std::string &msg) {
 }
 
 void ResponseSink::reply(Client &client, const std::string &msg) {
-  _appendLine(client, msg);
+  if (msg.empty())
+    return;
+  if (msg[0] == ':')
+    _appendLine(client, msg);
+  else
+    _appendLine(client, ":" + _serverName + " " + msg);
 }
 
 void ResponseSink::direct(Client &client, const std::string &msg) {
