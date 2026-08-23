@@ -49,8 +49,10 @@ class ReplyBuilder {
                                        const std::string& target,
                                        const std::string& errCode,
                                        const std::string& abortMsg);
-  static std::string errUnknownCommand(const std::string& command);
-  static std::string errNoRecipient(const std::string& command);
+  static std::string errUnknownCommand(const std::string& clientName,
+                                       const std::string& command);
+  static std::string errNoRecipient(const std::string& clientName,
+                                    const std::string& command);
   static std::string errNoOrigin(const std::string& clientName);
   static std::string errNoTextToSend(const std::string& clientName);
   static std::string errNoNicknameGiven();
