@@ -1,4 +1,5 @@
 #include "CommandDispatcher.hpp"
+#include "CapCommand.hpp"
 #include "InviteCommand.hpp"
 #include "JoinCommand.hpp"
 #include "KickCommand.hpp"
@@ -28,6 +29,7 @@ CommandDispatcher::CommandDispatcher(ServerContext &serverCtx)
   _commands["INVITE"] = new InviteCommand(_serverCtx);
   _commands["MODE"] = new ModeCommand(_serverCtx);
   _commands["PING"] = new PingCommand(_serverCtx);
+  _commands["CAP"] = new CapCommand(_serverCtx);
 }
 
 CommandDispatcher::~CommandDispatcher() {
@@ -40,7 +42,7 @@ CommandDispatcher::~CommandDispatcher() {
 bool CommandDispatcher::_isPreRegistrationCommand(
     const std::string &command) const {
   return command == "PASS" || command == "NICK" || command == "USER" ||
-         command == "QUIT";
+         command == "QUIT" || command == "CAP";
 }
 
 bool CommandDispatcher::dispatch(CommandContext &ctx) {
