@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sstream>
+#include "IrcLimits.hpp"
 
 Client::Client(int fd, const std::string& host)
     : _fd(fd),
@@ -109,21 +110,24 @@ void Client::appendRecvBuffer(const std::string& data) {
   _recvBuffer += data;
 }
 
-std::string Client::extractMessage() {
+bool Client::extractMessage(std::string& outMsg) {
   // RFC 2812: メッセージ境界は CR-LF。ただし nc など LF のみで送るクライアントも
   // 実運用では珍しくないため、LF を境界として検出しつつ、直前の CR を除去して
   // 両方の終端表現を受け付ける。
   std::string::size_type pos = _recvBuffer.find('\n');
   if (pos == std::string::npos)
-    return "";
+    return false;
 
   std::string::size_type msgEnd = pos;
   if (msgEnd > 0 && _recvBuffer[msgEnd - 1] == '\r')
     --msgEnd;
 
-  std::string msg = _recvBuffer.substr(0, msgEnd);
+  if (msgEnd > IrcLimits::MAX_MSG_LEN)
+    msgEnd = IrcLimits::MAX_MSG_LEN;
+
+  outMsg = _recvBuffer.substr(0, msgEnd);
   _recvBuffer.erase(0, pos + 1);
-  return msg;
+  return true;
 }
 
 // sendBuffer
