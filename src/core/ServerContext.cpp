@@ -1,11 +1,30 @@
 #include "ServerContext.hpp"
 #include <algorithm>
 #include <cctype>
+#include <ctime>
 #include <iostream>
+#include <set>
 #include <vector>
 #include "HostCaseMapping.hpp"
 #include "IrcCaseMapping.hpp"
 #include "ReplyBuilder.hpp"
+
+namespace {
+std::string formatCreatedAt() {
+  std::time_t now = std::time(NULL);
+  std::tm* tm = std::localtime(&now);
+  if (tm == NULL)
+    return std::string("unknown");
+  char buf[64];
+  std::size_t n = std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %Z", tm);
+  if (n == 0)
+    return std::string("unknown");
+  std::string result(buf, n);
+  while (!result.empty() && result[result.size() - 1] == ' ')
+    result.erase(result.size() - 1);
+  return result;
+}
+}  // namespace
 
 ServerContext::ServerContext(std::map<int, Client*>& clients,
                              std::map<std::string, Channel*>& channels,
@@ -14,7 +33,8 @@ ServerContext::ServerContext(std::map<int, Client*>& clients,
     : _clients(clients),
       _channels(channels),
       _responseSink(responseSink),
-      _password(password) {}
+      _password(password),
+      _createdAt(formatCreatedAt()) {}
 
 ServerContext::~ServerContext() {}
 
@@ -118,8 +138,21 @@ bool ServerContext::tryCompleteRegistration(Client& client) {
   if (client.isPassChecked() && !client.getNickName().empty() &&
       !client.getUserName().empty()) {
     client.setRegistered(true);
-    _responseSink.reply(client, ReplyBuilder::rplWelcome(client.getNickName(),
-                                                         client.getPrefix()));
+
+    const std::string& nick = client.getNickName();
+    const std::string& serverName = _responseSink.getServerName();
+    const std::string version = "0.1";
+    const std::string umodes = "iwoOars";
+    const std::string cmodes = "itklo";
+
+    _responseSink.reply(client,
+                        ReplyBuilder::rplWelcome(nick, client.getPrefix()));
+    _responseSink.reply(client,
+                        ReplyBuilder::rplYourHost(nick, serverName, version));
+    _responseSink.reply(client, ReplyBuilder::rplCreated(nick, _createdAt));
+    _responseSink.reply(
+        client, ReplyBuilder::rplMyInfo(nick, serverName, version, umodes,
+                                        cmodes));
 
     std::cout << "[+] Client(FD: " << client.getFd()
               << ") has successfully logged in." << std::endl;
@@ -175,6 +208,28 @@ void ServerContext::removeClientFromAllChannels(Client& client,
   }
 }
 
+void ServerContext::broadcastToVisibleMembers(Client& client,
+                                               const std::string& msg) {
+  std::set<int> notified;
+
+  _responseSink.reply(client, msg);
+  notified.insert(client.getFd());
+
+  for (std::map<std::string, Channel*>::iterator it = _channels.begin();
+       it != _channels.end(); ++it) {
+    Channel* channel = it->second;
+    if (!channel->hasMember(client))
+      continue;
+    const std::map<int, Client*>& members = channel->getMembers();
+    for (std::map<int, Client*>::const_iterator m = members.begin();
+         m != members.end(); ++m) {
+      if (notified.insert(m->first).second) {
+        _responseSink.direct(*(m->second), msg);
+      }
+    }
+  }
+}
+
 ResponseSink& ServerContext::responseSink() {
   return _responseSink;
 }
@@ -185,4 +240,8 @@ const ResponseSink& ServerContext::responseSink() const {
 
 const std::string& ServerContext::password() const {
   return _password;
+}
+
+const std::string& ServerContext::createdAt() const {
+  return _createdAt;
 }
