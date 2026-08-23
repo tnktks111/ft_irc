@@ -14,7 +14,8 @@ Client::Client(int fd, const std::string& host)
       _recvBuffer(""),
       _sendBuffer(""),
       _isPassChecked(false),
-      _isRegistered(false) {}
+      _isRegistered(false),
+      _isClosing(false) {}
 
 Client::~Client() {
   close(_fd);
@@ -160,6 +161,9 @@ bool Client::isPassChecked() const {
 bool Client::isRegistered() const {
   return _isRegistered;
 }
+bool Client::isClosing() const {
+  return _isClosing;
+}
 
 // Setter
 void Client::setNickName(const std::string& nickName) {
@@ -200,6 +204,9 @@ void Client::setPassChecked(bool status) {
 }
 void Client::setRegistered(bool status) {
   _isRegistered = status;
+}
+void Client::markClosing() {
+  _isClosing = true;
 }
 
 std::string Client::getPrefix() const {

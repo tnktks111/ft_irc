@@ -1,5 +1,6 @@
 *This project has been created as part of the 42 curriculum by ttanaka, guruguruge.*
 
+
 # ft_irc — Internet Relay Chat Server
 
 ## Description

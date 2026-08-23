@@ -9,5 +9,9 @@ bool QuitCommand::execute(CommandContext &ctx) {
   std::string quitMsg = ":" + ctx.prefix() + " QUIT :" + reason;
 
   _serverCtx.removeClientFromAllChannels(ctx.client(), quitMsg);
-  return false;
+  ctx.reply("ERROR :Closing Link: " + ctx.client().getHost() + " (Quit: " +
+            reason + ")");
+
+  ctx.client().markClosing();
+  return true;
 }

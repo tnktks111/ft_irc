@@ -51,6 +51,7 @@ private:
   void _acceptNewConnection();
   ConnectionStatus _handleClientMessage(struct pollfd &clientPollFd);
   void _updatePollEvents();
+  void _reapClosingClients();
 
   bool _executeCommand(Client *client, const Message &msg);
 

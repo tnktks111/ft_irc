@@ -84,6 +84,7 @@ void Server::start() {
     _updatePollEvents();
     if (_waitForEvents())
       _processActiveConnections();
+    _reapClosingClients();
   }
 
   std::cout << "Server shutdown..." << std::endl;
@@ -247,6 +248,10 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
   int bytesRead = recv(clientPollFd.fd, buffer, sizeof(buffer), 0);
 
   if (bytesRead > 0) {
+    // A client that already sent QUIT is on its way out. Drop any further
+    // bytes on the floor and let the closing path drain the send buffer.
+    if (_clients[clientPollFd.fd]->isClosing())
+      return KEEP_ALIVE;
 
     _clients[clientPollFd.fd]->appendRecvBuffer(std::string(buffer, bytesRead));
 
@@ -259,6 +264,11 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
       if (!_executeCommand(_clients[clientPollFd.fd], msg)) {
         return DISCONNECT;
       }
+      // A command handler (e.g. QUIT) may have flagged the client for
+      // deferred close. Stop consuming further commands so the closing
+      // client's remaining input isn't executed after the goodbye.
+      if (_clients[clientPollFd.fd]->isClosing())
+        break;
     }
     return KEEP_ALIVE;
   } else if (bytesRead == 0) {
@@ -297,6 +307,26 @@ void Server::_disconnectClient(size_t &index, const std::string &quitMsg) {
   _clients.erase(fd);
   _pollFds.erase(_pollFds.begin() + index);
   --index;
+}
+
+// Deferred close: QUIT-triggered clients stay in the poll set until the normal
+// POLLOUT path has drained their send buffer (ERROR :Closing Link + any
+// pending numerics). Once the buffer is empty we tear the connection down
+// through the same _disconnectClient path used by TCP hangup.
+// This avoids calling send() outside the poll() readiness handshake, which
+// the subject forbids.
+void Server::_reapClosingClients() {
+  for (size_t i = 0; i < _pollFds.size();) {
+    int fd = _pollFds[i].fd;
+    std::map<int, Client *>::iterator it = _clients.find(fd);
+    if (it != _clients.end() && it->second->isClosing() &&
+        it->second->getSendBuffer().empty()) {
+      _disconnectClient(i, _makeQuitMessage(*it->second, "Client Quit"));
+      ++i;
+    } else {
+      ++i;
+    }
+  }
 }
 
 std::string Server::_makeQuitMessage(const Client &client,

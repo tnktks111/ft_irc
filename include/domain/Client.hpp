@@ -32,6 +32,7 @@ class Client {
 
   bool _isPassChecked;
   bool _isRegistered;
+  bool _isClosing;
 
   // validation helper
   static bool _isLetter(char c);
@@ -67,6 +68,7 @@ class Client {
   const std::string& getHost() const;
   bool isPassChecked() const;
   bool isRegistered() const;
+  bool isClosing() const;
 
   // Setter
   void setNickName(const std::string& nickName);
@@ -76,6 +78,7 @@ class Client {
   void removeMode(UserMode mode);
   void setPassChecked(bool status);
   void setRegistered(bool status);
+  void markClosing();
   std::string getPrefix() const;
 
   // User mode helpers
