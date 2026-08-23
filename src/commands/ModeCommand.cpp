@@ -196,11 +196,11 @@ bool ModeCommand::execute(CommandContext &ctx) {
       if (adding) {
         if (ctx.params().size() <= paramIndex) {
           ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
-          return true;
+          break;
         }
         if (!channel->getPassword().empty()) {
           ctx.reply(ReplyBuilder::errKeySet(ctx.nick(), chName));
-          return true;
+          break;
         }
         channel->setPassword(ctx.params()[paramIndex]);
         modeParams += " " + ctx.params()[paramIndex++];
@@ -211,18 +211,18 @@ bool ModeCommand::execute(CommandContext &ctx) {
     } else if (flag == 'o') {
       if (ctx.params().size() <= paramIndex) {
         ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
-        return true;
+        break;
       }
       std::string targetNick = ctx.params()[paramIndex++];
       Client *targetClient = _serverCtx.findClientByNick(targetNick);
       if (targetClient == NULL) {
         ctx.reply(ReplyBuilder::errNoSuchNick(ctx.nick(), targetNick));
-        return true;
+        break;
       }
       if (!channel->hasMember(*targetClient)) {
         ctx.reply(
             ReplyBuilder::errUserNotInChannel(ctx.nick(), targetNick, chName));
-        return true;
+        break;
       }
       if (adding)
         channel->addOperator(*targetClient);
@@ -234,13 +234,13 @@ bool ModeCommand::execute(CommandContext &ctx) {
       if (adding) {
         if (ctx.params().size() <= paramIndex) {
           ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
-          return true;
+          break;
         }
         size_t limit;
         if (!parsePositiveSize(ctx.params()[paramIndex], limit)) {
           ctx.reply(ReplyBuilder::errInvalidModeParam(
               ctx.nick(), chName, 'l', ctx.params()[paramIndex]));
-          return true;
+          break;
         }
         channel->setUserLimit(limit);
         modeParams += " " + ctx.params()[paramIndex++];
