@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by tnktks111, koyonx, guruguruge, sabe-0524, melswonder.*
+*This project has been created as part of the 42 curriculum by ttanaka, guruguruge.*
 
 # ft_irc — Internet Relay Chat Server
 
@@ -83,12 +83,10 @@ PRIVMSG #test :hello
 
 AI assistants (Claude) were used as a support tool, always with human review:
 
-- Reviewing pull requests against the subject requirements (C++98
-  compliance, single-poll rule, forbidden errno usage after I/O) before merge.
-- Drafting RFC-conformance fixes (numeric reply formats, 512-byte message
-  limit, NAMES reply chunking) that were then read, tested, and adjusted by
-  the team.
-- Explaining RFC 1459/2812 semantics during design discussions.
+- Learning how to write the code: idiomatic C++98 patterns, non-blocking
+  socket handling, and how to structure a poll()-driven event loop.
+- Understanding the RFC specifications: reading RFC 1459/2812 together and
+  clarifying message formats, numeric replies, and channel/mode semantics.
 
 All merged code was built and tested locally by the team; the architecture
 and command implementations were designed and written by the members listed
