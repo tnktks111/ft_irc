@@ -35,7 +35,6 @@ private:
   Server &operator=(const Server &other);
 
   static std::string _buildErrnoMessage(const std::string &context);
-  static std::string _buildFdErrnoMessage(const std::string &context, int fd);
 
   void _setupServerSocket();
   void _setNonBlocking(int fd);
@@ -52,6 +51,7 @@ private:
   void _acceptNewConnection();
   ConnectionStatus _handleClientMessage(struct pollfd &clientPollFd);
   void _updatePollEvents();
+  void _reapClosingClients();
 
   bool _executeCommand(Client *client, const Message &msg);
 

@@ -6,10 +6,12 @@ QuitCommand::~QuitCommand() {}
 bool QuitCommand::execute(CommandContext &ctx) {
   std::string reason =
       (ctx.params().empty()) ? "Client Quit" : ctx.params()[0];
+  std::string quitMsg = ":" + ctx.prefix() + " QUIT :" + reason;
 
+  _serverCtx.removeClientFromAllChannels(ctx.client(), quitMsg);
   ctx.reply("ERROR :Closing Link: " + ctx.client().getHost() + " (Quit: " +
             reason + ")");
 
-  _serverCtx.removeClientFromAllChannels(ctx.client(), reason);
-  return false;
+  ctx.client().markClosing();
+  return true;
 }

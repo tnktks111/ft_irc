@@ -46,13 +46,6 @@ std::string Server::_buildErrnoMessage(const std::string &context) {
   return oss.str();
 }
 
-std::string Server::_buildFdErrnoMessage(const std::string &context, int fd) {
-  std::ostringstream oss;
-  oss << "Error: " << context << " on Fd " << fd << " (errno = " << errno
-      << ")";
-  return oss.str();
-}
-
 // Signal Handler
 void Server::_handleSignal(int signo) {
   (void)signo;
@@ -91,6 +84,7 @@ void Server::start() {
     _updatePollEvents();
     if (_waitForEvents())
       _processActiveConnections();
+    _reapClosingClients();
   }
 
   std::cout << "Server shutdown..." << std::endl;
@@ -213,14 +207,10 @@ void Server::_flushSendBuffer(size_t index) {
           send(_pollFds[index].fd, sendBuf.c_str(), sendBuf.length(), 0);
       if (bytesSent > 0) {
         client->eraseSendBuffer(bytesSent);
-      } else if (bytesSent == -1) {
-
-        if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
-
-          std::cerr << _buildFdErrnoMessage("send() failed", _pollFds[index].fd)
-                    << std::endl;
-        }
       }
+      // On error, keep the buffer and retry on the next POLLOUT; a dead
+      // socket is reported by poll() as POLLERR/POLLHUP and handled there.
+      // The subject forbids consulting errno after send().
     }
 
     if (client->getSendBuffer().empty()) {
@@ -235,11 +225,9 @@ void Server::_acceptNewConnection() {
 
   int clientFd = accept(_serverFd, (struct sockaddr *)&clientAddr, &clientLen);
   if (clientFd == -1) {
-    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
-      return;
-
-    std::string errMsg = _buildErrnoMessage("accept() failed");
-    throw std::runtime_error(errMsg);
+    // Transient failure (or fd exhaustion): keep serving and let the next
+    // POLLIN retry. The subject forbids errno-driven branching after I/O.
+    return;
   }
 
   char host[INET_ADDRSTRLEN];
@@ -260,16 +248,27 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
   int bytesRead = recv(clientPollFd.fd, buffer, sizeof(buffer), 0);
 
   if (bytesRead > 0) {
+    // A client that already sent QUIT is on its way out. Drop any further
+    // bytes on the floor and let the closing path drain the send buffer.
+    if (_clients[clientPollFd.fd]->isClosing())
+      return KEEP_ALIVE;
 
     _clients[clientPollFd.fd]->appendRecvBuffer(std::string(buffer, bytesRead));
 
     std::string rawMsg;
 
-    while ((rawMsg = _clients[clientPollFd.fd]->extractMessage()) != "") {
+    while (_clients[clientPollFd.fd]->extractMessage(rawMsg)) {
+      if (rawMsg.empty())
+        continue;
       Message msg(rawMsg);
       if (!_executeCommand(_clients[clientPollFd.fd], msg)) {
         return DISCONNECT;
       }
+      // A command handler (e.g. QUIT) may have flagged the client for
+      // deferred close. Stop consuming further commands so the closing
+      // client's remaining input isn't executed after the goodbye.
+      if (_clients[clientPollFd.fd]->isClosing())
+        break;
     }
     return KEEP_ALIVE;
   } else if (bytesRead == 0) {
@@ -277,11 +276,8 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
               << std::endl;
     return DISCONNECT;
   } else {
-    if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-      return KEEP_ALIVE;
-    }
-
-    std::cerr << _buildErrnoMessage("recv() failed") << std::endl;
+    // recv() failed on a fd poll() reported readable: treat it as a
+    // disconnect. The subject forbids consulting errno after recv().
     std::cout << "[+] A client has disconnected. Fd: " << clientPollFd.fd
               << std::endl;
     return DISCONNECT;
@@ -307,11 +303,30 @@ void Server::_registerClient(int clientFd, const std::string &host) {
 void Server::_disconnectClient(size_t &index, const std::string &quitMsg) {
   int fd = _pollFds[index].fd;
   _serverCtx.removeClientFromAllChannels(*_clients[fd], quitMsg);
-  _flushSendBuffer(index);
   delete _clients[fd];
   _clients.erase(fd);
   _pollFds.erase(_pollFds.begin() + index);
   --index;
+}
+
+// Deferred close: QUIT-triggered clients stay in the poll set until the normal
+// POLLOUT path has drained their send buffer (ERROR :Closing Link + any
+// pending numerics). Once the buffer is empty we tear the connection down
+// through the same _disconnectClient path used by TCP hangup.
+// This avoids calling send() outside the poll() readiness handshake, which
+// the subject forbids.
+void Server::_reapClosingClients() {
+  for (size_t i = 0; i < _pollFds.size();) {
+    int fd = _pollFds[i].fd;
+    std::map<int, Client *>::iterator it = _clients.find(fd);
+    if (it != _clients.end() && it->second->isClosing() &&
+        it->second->getSendBuffer().empty()) {
+      _disconnectClient(i, _makeQuitMessage(*it->second, "Client Quit"));
+      ++i;
+    } else {
+      ++i;
+    }
+  }
 }
 
 std::string Server::_makeQuitMessage(const Client &client,
