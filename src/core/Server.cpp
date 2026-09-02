@@ -262,6 +262,8 @@ Server::ConnectionStatus Server::_handleClientMessage(
       if (rawMsg.empty())
         continue;
       Message msg(rawMsg);
+      if (msg.getCommand().empty())
+        continue;
       if (!_executeCommand(_clients[clientPollFd.fd], msg)) {
         return DISCONNECT;
       }
