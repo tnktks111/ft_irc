@@ -25,9 +25,11 @@ void Message::_parse(const std::string& rawMessage) {
   }
 
   std::string::size_type startPos = msg.find_first_not_of(' ');
-  if (startPos != std::string::npos) {
-    msg = msg.substr(startPos);
-  }
+
+  if (startPos == std::string::npos)
+    return;
+
+  msg = msg.substr(startPos);
 
   std::string::size_type trailingPos = msg.find(" :");
   std::string trailing = "";
