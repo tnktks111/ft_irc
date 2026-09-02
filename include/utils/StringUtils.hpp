@@ -10,6 +10,7 @@ namespace StringUtils {
 // If `src` ends with `delim`, a trailing empty token is appended too.
 // (Callers that want to skip empties should filter the result.)
 std::vector<std::string> split(const std::string& src, char delim);
+std::string toUpper(const std::string& value);
 
 }  // namespace StringUtils
 

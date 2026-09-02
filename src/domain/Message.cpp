@@ -1,5 +1,7 @@
 #include "Message.hpp"
 #include <sstream>
+#include "StringUtils.hpp"
+
 Message::Message(const std::string& rawMessage) {
   _parse(rawMessage);
 }
@@ -44,6 +46,8 @@ void Message::_parse(const std::string& rawMessage) {
   std::istringstream iss(msg);
   if (!(iss >> _command))
     return;
+
+  _command = StringUtils::toUpper(_command);
 
   std::string param;
   while (iss >> param) {
