@@ -5,10 +5,10 @@
 #include "ReplyBuilder.hpp"
 #include "StringUtils.hpp"
 
-PartCommand::PartCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
+PartCommand::PartCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 PartCommand::~PartCommand() {}
 
-bool PartCommand::execute(CommandContext &ctx) {
+bool PartCommand::execute(CommandContext& ctx) {
   if (ctx.params().empty()) {
     ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "PART"));
     return true;
@@ -25,11 +25,11 @@ bool PartCommand::execute(CommandContext &ctx) {
 
   // RFC 2812 §3.2.2: 各 channel を独立に処理し、1 つ失敗しても他は継続。
   for (std::size_t i = 0; i < channels.size(); ++i) {
-    const std::string &chName = channels[i];
+    const std::string& chName = channels[i];
     if (chName.empty())
       continue;
 
-    Channel *channel = _serverCtx.findChannel(chName);
+    Channel* channel = _serverCtx.findChannel(chName);
     if (channel == NULL) {
       ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
       continue;

@@ -86,8 +86,8 @@ std::string ReplyBuilder::errTooManyTargets(const std::string& clientName,
                                             const std::string& target,
                                             const std::string& errCode,
                                             const std::string& abortMsg) {
-  return "407 " + clientName + " " + target + " :" + errCode +
-    " recipients. " + abortMsg;
+  return "407 " + clientName + " " + target + " :" + errCode + " recipients. " +
+         abortMsg;
 }
 
 std::string ReplyBuilder::errUnknownCommand(const std::string& clientName,
@@ -177,9 +177,8 @@ std::string ReplyBuilder::errInvalidModeParam(const std::string& clientName,
                                               const std::string& channelName,
                                               char mode,
                                               const std::string& parameter) {
-  return "696 " + clientName + " " + channelName + " " +
-         std::string(1, mode) + " " + parameter +
-         " :Invalid mode parameter";
+  return "696 " + clientName + " " + channelName + " " + std::string(1, mode) +
+         " " + parameter + " :Invalid mode parameter";
 }
 
 std::string ReplyBuilder::errInviteOnlyChan(const std::string& clientName,

@@ -1,17 +1,17 @@
 #include "TopicCommand.hpp"
 #include "ReplyBuilder.hpp"
 
-TopicCommand::TopicCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
+TopicCommand::TopicCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 TopicCommand::~TopicCommand() {}
 
-bool TopicCommand::execute(CommandContext &ctx) {
+bool TopicCommand::execute(CommandContext& ctx) {
   if (ctx.params().empty()) {
     ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "TOPIC"));
     return true;
   }
 
   std::string chName = ctx.params()[0];
-  Channel *channel = _serverCtx.findChannel(chName);
+  Channel* channel = _serverCtx.findChannel(chName);
   if (channel == NULL) {
     ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
     return true;
@@ -25,7 +25,8 @@ bool TopicCommand::execute(CommandContext &ctx) {
     if (channel->getTopic().empty())
       ctx.reply(ReplyBuilder::rplNoTopic(ctx.nick(), chName));
     else
-      ctx.reply(ReplyBuilder::rplTopic(ctx.nick(), chName, channel->getTopic()));
+      ctx.reply(
+          ReplyBuilder::rplTopic(ctx.nick(), chName, channel->getTopic()));
     return true;
   }
 
@@ -35,8 +36,7 @@ bool TopicCommand::execute(CommandContext &ctx) {
   }
 
   channel->setTopic(ctx.params()[1]);
-  ctx.broadcast(*channel,
-                ":" + ctx.prefix() + " TOPIC " + chName + " :" +
-                    channel->getTopic());
+  ctx.broadcast(*channel, ":" + ctx.prefix() + " TOPIC " + chName + " :" +
+                              channel->getTopic());
   return true;
 }

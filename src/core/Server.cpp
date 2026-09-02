@@ -1,34 +1,37 @@
 #include "Server.hpp"
-#include "CommandContext.hpp"
-#include "Message.hpp"
 #include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 #include <cerrno>
 #include <csignal>
 #include <cstring>
-#include <fcntl.h>
 #include <iostream>
 #include <map>
-#include <netinet/in.h>
 #include <sstream>
 #include <stdexcept>
-#include <sys/socket.h>
-#include <unistd.h>
+#include "CommandContext.hpp"
+#include "Message.hpp"
 
 volatile sig_atomic_t Server::_shouldStop = 0;
 
 // Constructor & Destructor
-Server::Server(int port, const std::string &password)
-    : _port(port), _password(password), _serverFd(-1), _responseSink(),
+Server::Server(int port, const std::string& password)
+    : _port(port),
+      _password(password),
+      _serverFd(-1),
+      _responseSink(),
       _serverCtx(_clients, _channels, _responseSink, _password),
       _dispatcher(_serverCtx) {}
 
 Server::~Server() {
-  for (std::map<int, Client *>::iterator it = _clients.begin();
+  for (std::map<int, Client*>::iterator it = _clients.begin();
        it != _clients.end(); ++it) {
     delete it->second;
   }
 
-  for (std::map<std::string, Channel *>::iterator it = _channels.begin();
+  for (std::map<std::string, Channel*>::iterator it = _channels.begin();
        it != _channels.end(); ++it) {
     delete it->second;
   }
@@ -40,7 +43,7 @@ Server::~Server() {
 }
 
 // Errno Message Builder
-std::string Server::_buildErrnoMessage(const std::string &context) {
+std::string Server::_buildErrnoMessage(const std::string& context) {
   std::ostringstream oss;
   oss << "Error: " << context << " (errno = " << errno << ")";
   return oss.str();
@@ -111,7 +114,7 @@ void Server::_setupServerSocket() {
   serverAddr.sin_addr.s_addr = INADDR_ANY;
   serverAddr.sin_port = htons(_port);
 
-  if (bind(_serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) ==
+  if (bind(_serverFd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) ==
       -1) {
     throw std::runtime_error(_buildErrnoMessage("bind() failed"));
   }
@@ -170,7 +173,7 @@ void Server::_processActiveConnections() {
 }
 
 // helpers for process active connections
-void Server::_processPollError(size_t &index) {
+void Server::_processPollError(size_t& index) {
   if (_pollFds[index].fd == _serverFd) {
     throw std::runtime_error("Fatal error on server socket.");
   } else {
@@ -183,7 +186,7 @@ void Server::_processPollError(size_t &index) {
   }
 }
 
-Server::LoopAction Server::_processReadableEvent(size_t &index) {
+Server::LoopAction Server::_processReadableEvent(size_t& index) {
   if (_pollFds[index].fd == _serverFd) {
     _acceptNewConnection();
     return KEEP_PROCESSING;
@@ -198,8 +201,8 @@ Server::LoopAction Server::_processReadableEvent(size_t &index) {
 
 void Server::_flushSendBuffer(size_t index) {
   if (_pollFds[index].fd != _serverFd) {
-    Client *client = _clients[_pollFds[index].fd];
-    std::string &sendBuf = client->getSendBuffer();
+    Client* client = _clients[_pollFds[index].fd];
+    std::string& sendBuf = client->getSendBuffer();
 
     if (!sendBuf.empty()) {
       int bytesSent =
@@ -222,7 +225,7 @@ void Server::_acceptNewConnection() {
   struct sockaddr_in clientAddr;
   socklen_t clientLen = sizeof(clientAddr);
 
-  int clientFd = accept(_serverFd, (struct sockaddr *)&clientAddr, &clientLen);
+  int clientFd = accept(_serverFd, (struct sockaddr*)&clientAddr, &clientLen);
   if (clientFd == -1) {
     // Transient failure (or fd exhaustion): keep serving and let the next
     // POLLIN retry. The subject forbids errno-driven branching after I/O.
@@ -240,8 +243,8 @@ void Server::_acceptNewConnection() {
   _registerClient(clientFd, host);
 }
 
-Server::ConnectionStatus
-Server::_handleClientMessage(struct pollfd &clientPollFd) {
+Server::ConnectionStatus Server::_handleClientMessage(
+    struct pollfd& clientPollFd) {
   char buffer[1024];
 
   int bytesRead = recv(clientPollFd.fd, buffer, sizeof(buffer), 0);
@@ -274,12 +277,12 @@ Server::_handleClientMessage(struct pollfd &clientPollFd) {
   }
 }
 
-bool Server::_executeCommand(Client *client, const Message &msg) {
+bool Server::_executeCommand(Client* client, const Message& msg) {
   CommandContext ctx(*client, msg, _serverCtx);
   return _dispatcher.dispatch(ctx);
 }
 
-void Server::_registerClient(int clientFd, const std::string &host) {
+void Server::_registerClient(int clientFd, const std::string& host) {
   struct pollfd clientPollFd;
   clientPollFd.fd = clientFd;
   clientPollFd.events = POLLIN;
@@ -290,7 +293,7 @@ void Server::_registerClient(int clientFd, const std::string &host) {
   std::cout << "[+] A new client has connected. Fd: " << clientFd << std::endl;
 }
 
-void Server::_disconnectClient(size_t &index, const std::string &quitMsg) {
+void Server::_disconnectClient(size_t& index, const std::string& quitMsg) {
   int fd = _pollFds[index].fd;
   _serverCtx.removeClientFromAllChannels(*_clients[fd], quitMsg);
   delete _clients[fd];
@@ -299,8 +302,8 @@ void Server::_disconnectClient(size_t &index, const std::string &quitMsg) {
   --index;
 }
 
-std::string Server::_makeQuitMessage(const Client &client,
-                                     const std::string &reason) const {
+std::string Server::_makeQuitMessage(const Client& client,
+                                     const std::string& reason) const {
   return ":" + client.getPrefix() + " QUIT :" + reason;
 }
 

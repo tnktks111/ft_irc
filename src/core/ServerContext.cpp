@@ -150,9 +150,8 @@ bool ServerContext::tryCompleteRegistration(Client& client) {
     _responseSink.reply(client,
                         ReplyBuilder::rplYourHost(nick, serverName, version));
     _responseSink.reply(client, ReplyBuilder::rplCreated(nick, _createdAt));
-    _responseSink.reply(
-        client, ReplyBuilder::rplMyInfo(nick, serverName, version, umodes,
-                                        cmodes));
+    _responseSink.reply(client, ReplyBuilder::rplMyInfo(
+                                    nick, serverName, version, umodes, cmodes));
 
     std::cout << "[+] Client(FD: " << client.getFd()
               << ") has successfully logged in." << std::endl;
@@ -209,7 +208,7 @@ void ServerContext::removeClientFromAllChannels(Client& client,
 }
 
 void ServerContext::broadcastToVisibleMembers(Client& client,
-                                               const std::string& msg) {
+                                              const std::string& msg) {
   std::set<int> notified;
 
   _responseSink.reply(client, msg);

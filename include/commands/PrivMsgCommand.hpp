@@ -5,17 +5,17 @@
 #include "ServerContext.hpp"
 
 class PrivMsgCommand : public ACommand {
-private:
-	ServerContext &_serverCtx;
+ private:
+  ServerContext& _serverCtx;
 
-	PrivMsgCommand(const PrivMsgCommand &other);
-	PrivMsgCommand &operator=(const PrivMsgCommand &other);
+  PrivMsgCommand(const PrivMsgCommand& other);
+  PrivMsgCommand& operator=(const PrivMsgCommand& other);
 
-public:
-	PrivMsgCommand(ServerContext &serverCtx);
-	virtual ~PrivMsgCommand();
+ public:
+  PrivMsgCommand(ServerContext& serverCtx);
+  virtual ~PrivMsgCommand();
 
-	virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif

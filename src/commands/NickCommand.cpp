@@ -30,8 +30,7 @@ bool NickCommand::execute(CommandContext& ctx) {
   ctx.client().setNickName(newNick);
 
   if (wasRegistered && oldNick != newNick) {
-    const std::string notification =
-        ":" + oldPrefix + " NICK :" + newNick;
+    const std::string notification = ":" + oldPrefix + " NICK :" + newNick;
     _serverCtx.broadcastToVisibleMembers(ctx.client(), notification);
   }
 

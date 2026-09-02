@@ -49,9 +49,9 @@ bool JoinCommand::execute(CommandContext& ctx) {
   }
 
   std::vector<std::string> chNames = StringUtils::split(ctx.params()[0], ',');
-  std::vector<std::string> keys =
-      (ctx.params().size() > 1) ? StringUtils::split(ctx.params()[1], ',')
-                                : std::vector<std::string>();
+  std::vector<std::string> keys = (ctx.params().size() > 1)
+                                      ? StringUtils::split(ctx.params()[1], ',')
+                                      : std::vector<std::string>();
 
   for (std::size_t idx = 0; idx != chNames.size(); ++idx) {
     std::string chName = chNames[idx];
