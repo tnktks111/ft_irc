@@ -11,7 +11,7 @@ bool CapCommand::execute(CommandContext& ctx) {
     return true;
   }
 
-  const std::string& sub = StringUtils::toUpper(ctx.params()[0]);
+  const std::string sub = StringUtils::toUpper(ctx.params()[0]);
 
   if (sub == "LS") {
     ctx.reply("CAP " + target + " LS :");
