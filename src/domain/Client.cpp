@@ -111,8 +111,12 @@ int Client::getFd() const {
   return _fd;
 }
 
-void Client::appendRecvBuffer(const std::string& data) {
+bool Client::appendRecvBuffer(const std::string& data) {
+  if (_recvBuffer.size() > IrcLimits::MAX_RECV_QUEUE ||
+      data.size() > IrcLimits::MAX_RECV_QUEUE - _recvBuffer.size())
+    return false;
   _recvBuffer += data;
+  return true;
 }
 
 bool Client::extractMessage(std::string& outMsg) {
@@ -137,6 +141,11 @@ bool Client::extractMessage(std::string& outMsg) {
 
 // sendBuffer
 void Client::appendSendBuffer(const std::string& msg) {
+  if (_sendBuffer.size() > IrcLimits::MAX_SEND_QUEUE ||
+      msg.size() > IrcLimits::MAX_SEND_QUEUE - _sendBuffer.size()) {
+    _sendBufferExceeded = true;
+    return;
+  }
   _sendBuffer += msg;
 }
 std::string& Client::getSendBuffer() {

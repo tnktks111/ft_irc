@@ -41,6 +41,7 @@ class Server {
   bool _waitForEvents();
   void _registerClient(int clientFd, const std::string& host);
   void _disconnectClient(size_t& index, const std::string& quitMsg);
+  void _disconnectSendQueueExceededClients();
   std::string _makeQuitMessage(const Client& client,
                                const std::string& reason) const;
 
