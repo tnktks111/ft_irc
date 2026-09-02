@@ -33,6 +33,8 @@ class Client {
   bool _isPassChecked;
   bool _isRegistered;
 
+  bool _sendBufferExceeded;
+
   // validation helper
   static bool _isLetter(char c);
   static bool _isDigit(char c);
@@ -52,11 +54,12 @@ class Client {
   static bool isValidHost(const std::string& token);
 
   int getFd() const;
-  void appendRecvBuffer(const std::string& data);
+  bool appendRecvBuffer(const std::string& data);
   bool extractMessage(std::string& outMsg);
 
   // sendBuffer
   void appendSendBuffer(const std::string& msg);
+  bool isSendBufferExceeded() const;
   std::string& getSendBuffer();
   void eraseSendBuffer(size_t length);
 

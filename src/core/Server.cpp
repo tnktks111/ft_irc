@@ -84,6 +84,7 @@ void Server::start() {
   std::cout << "Server is running on port " << _port << "..." << std::endl;
 
   while (!_shouldStop) {
+    _disconnectSendQueueExceededClients();
     _updatePollEvents();
     if (_waitForEvents())
       _processActiveConnections();
@@ -251,7 +252,9 @@ Server::ConnectionStatus Server::_handleClientMessage(
 
   if (bytesRead > 0) {
 
-    _clients[clientPollFd.fd]->appendRecvBuffer(std::string(buffer, bytesRead));
+    if (!_clients[clientPollFd.fd]->appendRecvBuffer(
+            std::string(buffer, bytesRead)))
+      return DISCONNECT;
 
     std::string rawMsg;
 
@@ -300,6 +303,27 @@ void Server::_disconnectClient(size_t& index, const std::string& quitMsg) {
   _clients.erase(fd);
   _pollFds.erase(_pollFds.begin() + index);
   --index;
+}
+
+void Server::_disconnectSendQueueExceededClients() {
+  size_t index = 1;
+
+  while (index < _pollFds.size()) {
+    int fd = _pollFds[index].fd;
+    std::map<int, Client*>::iterator it = _clients.find(fd);
+
+    if (it == _clients.end() || !it->second->isSendBufferExceeded()) {
+      ++index;
+      continue;
+    }
+
+    Client* client = it->second;
+    std::string quitMsg = _makeQuitMessage(*client, "Max SendQ exceeded");
+
+    _disconnectClient(index, quitMsg);
+
+    index = 1;
+  }
 }
 
 std::string Server::_makeQuitMessage(const Client& client,
