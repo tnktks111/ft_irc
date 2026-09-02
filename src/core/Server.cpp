@@ -305,7 +305,7 @@ void Server::_disconnectClient(size_t& index, const std::string& quitMsg) {
   --index;
 }
 
-void _disconnectSendQueueExceededClients() {
+void Server::_disconnectSendQueueExceededClients() {
   size_t index = 1;
 
   while (index < _pollFds.size()) {
