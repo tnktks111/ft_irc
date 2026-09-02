@@ -1,4 +1,5 @@
 #include "CapCommand.hpp"
+#include "StringUtils.hpp"
 
 CapCommand::CapCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 CapCommand::~CapCommand() {}
@@ -10,7 +11,7 @@ bool CapCommand::execute(CommandContext& ctx) {
     return true;
   }
 
-  const std::string& sub = ctx.params()[0];
+  const std::string& sub = StringUtils::toUpper(ctx.params()[0]);
 
   if (sub == "LS") {
     ctx.reply("CAP " + target + " LS :");
