@@ -16,7 +16,8 @@ Client::Client(int fd, const std::string& host)
       _recvBuffer(""),
       _sendBuffer(""),
       _isPassChecked(false),
-      _isRegistered(false) {}
+      _isRegistered(false),
+      _sendBufferExceeded(false) {}
 
 Client::~Client() {
   close(_fd);
@@ -148,9 +149,15 @@ void Client::appendSendBuffer(const std::string& msg) {
   }
   _sendBuffer += msg;
 }
+
+bool Client::isSendBufferExceeded() const {
+  return _sendBufferExceeded;
+}
+
 std::string& Client::getSendBuffer() {
   return _sendBuffer;
 }
+
 void Client::eraseSendBuffer(size_t length) {
   _sendBuffer.erase(0, length);
 }
