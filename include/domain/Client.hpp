@@ -57,7 +57,7 @@ class Client {
 
   // sendBuffer
   bool _sendBufferExceeded;
-  bool appendSendBuffer(const std::string& msg);
+  void appendSendBuffer(const std::string& msg);
   bool isSendBufferExceeded() const;
   std::string& getSendBuffer();
   void eraseSendBuffer(size_t length);
