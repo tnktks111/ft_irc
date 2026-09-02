@@ -1,5 +1,6 @@
 #include "Channel.hpp"
 #include <algorithm>
+#include "IrcCaseMapping.hpp"
 
 Channel::Channel(const std::string& name)
     : _name(name),
@@ -148,18 +149,22 @@ bool Channel::isOperator(int fd) const {
 
 void Channel::addInvite(const std::string& nickName) {
   if (!isInvited(nickName)) {
-    _invitedUserNicks.push_back(nickName);
+    _invitedUserNicks.push_back(IrcCaseMapping::normalize(nickName));
   }
 }
 
 bool Channel::isInvited(const std::string& nickName) const {
+  std::string normalizedNick = IrcCaseMapping::normalize(nickName);
   return std::find(_invitedUserNicks.begin(), _invitedUserNicks.end(),
-                   nickName) != _invitedUserNicks.end();
+                   normalizedNick) != _invitedUserNicks.end();
 }
 
 void Channel::removeInvite(const std::string& nickName) {
-  std::vector<std::string>::iterator it =
-      std::find(_invitedUserNicks.begin(), _invitedUserNicks.end(), nickName);
+  std::string normalizedNick = IrcCaseMapping::normalize(nickName);
+
+  std::vector<std::string>::iterator it = std::find(
+      _invitedUserNicks.begin(), _invitedUserNicks.end(), normalizedNick);
+
   if (it != _invitedUserNicks.end()) {
     _invitedUserNicks.erase(it);
   }
