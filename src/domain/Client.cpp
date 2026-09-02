@@ -1,6 +1,8 @@
 #include "Client.hpp"
-#include <arpa/inet.h>
+#include <netdb.h>
+#include <sys/socket.h>
 #include <unistd.h>
+#include <cstring>
 #include <sstream>
 #include "IrcLimits.hpp"
 
@@ -86,16 +88,19 @@ bool Client::isValidHostName(const std::string& token) {
 }
 
 bool Client::isValidHostAddr(const std::string& token) {
-  struct in_addr ipv4_addr;
-  struct in6_addr ipv6_addr;
+  struct addrinfo hints;
+  struct addrinfo* result = NULL;
 
-  if (inet_pton(AF_INET, token.c_str(), &ipv4_addr) == 1)
-    return true;
+  std::memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_NUMERICHOST;
 
-  if (inet_pton(AF_INET6, token.c_str(), &ipv6_addr) == 1)
-    return true;
+  if (getaddrinfo(token.c_str(), NULL, &hints, &result) != 0 || result == NULL)
+    return false;
 
-  return false;
+  freeaddrinfo(result);
+  return true;
 }
 
 bool Client::isValidHost(const std::string& token) {
