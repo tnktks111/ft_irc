@@ -52,7 +52,7 @@ class Client {
   static bool isValidHost(const std::string& token);
 
   int getFd() const;
-  void appendRecvBuffer(const std::string& data);
+  bool appendRecvBuffer(const std::string& data);
   bool extractMessage(std::string& outMsg);
 
   // sendBuffer
