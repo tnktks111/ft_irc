@@ -5,17 +5,17 @@
 #include "ServerContext.hpp"
 
 class KickCommand : public ACommand {
-private:
-	ServerContext &_serverCtx;
+ private:
+  ServerContext& _serverCtx;
 
-	KickCommand(const KickCommand &other);
-	KickCommand &operator=(const KickCommand &other);
+  KickCommand(const KickCommand& other);
+  KickCommand& operator=(const KickCommand& other);
 
-public:
-	KickCommand(ServerContext &serverCtx);
-	virtual ~KickCommand();
+ public:
+  KickCommand(ServerContext& serverCtx);
+  virtual ~KickCommand();
 
-	virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif

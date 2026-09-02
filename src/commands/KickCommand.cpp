@@ -5,10 +5,10 @@
 #include "ReplyBuilder.hpp"
 #include "StringUtils.hpp"
 
-KickCommand::KickCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
+KickCommand::KickCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 KickCommand::~KickCommand() {}
 
-bool KickCommand::execute(CommandContext &ctx) {
+bool KickCommand::execute(CommandContext& ctx) {
   if (ctx.params().size() < 2) {
     ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "KICK"));
     return true;
@@ -32,17 +32,17 @@ bool KickCommand::execute(CommandContext &ctx) {
   }
 
   for (std::size_t i = 0; i < users.size(); ++i) {
-    const std::string &chName =
+    const std::string& chName =
         (channels.size() == 1) ? channels[0] : channels[i];
-    const std::string &targetNick = users[i];
+    const std::string& targetNick = users[i];
 
     if (chName.empty() || targetNick.empty())
       continue;
 
     // reason 未指定なら各 user 名をそのまま comment に使う (元実装の挙動)
-    const std::string &comment = hasReason ? reason : targetNick;
+    const std::string& comment = hasReason ? reason : targetNick;
 
-    Channel *channel = _serverCtx.findChannel(chName);
+    Channel* channel = _serverCtx.findChannel(chName);
     if (channel == NULL) {
       ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
       continue;
@@ -56,7 +56,7 @@ bool KickCommand::execute(CommandContext &ctx) {
       continue;
     }
 
-    Client *targetClient = _serverCtx.findClientByNick(targetNick);
+    Client* targetClient = _serverCtx.findClientByNick(targetNick);
     if (targetClient == NULL || !channel->hasMember(*targetClient)) {
       ctx.reply(
           ReplyBuilder::errUserNotInChannel(ctx.nick(), targetNick, chName));

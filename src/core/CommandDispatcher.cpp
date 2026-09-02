@@ -1,4 +1,5 @@
 #include "CommandDispatcher.hpp"
+#include <iostream>
 #include "CapCommand.hpp"
 #include "InviteCommand.hpp"
 #include "JoinCommand.hpp"
@@ -13,9 +14,8 @@
 #include "ReplyBuilder.hpp"
 #include "TopicCommand.hpp"
 #include "UserCommand.hpp"
-#include <iostream>
 
-CommandDispatcher::CommandDispatcher(ServerContext &serverCtx)
+CommandDispatcher::CommandDispatcher(ServerContext& serverCtx)
     : _serverCtx(serverCtx) {
   _commands["PASS"] = new PassCommand(_serverCtx);
   _commands["NICK"] = new NickCommand(_serverCtx);
@@ -33,31 +33,30 @@ CommandDispatcher::CommandDispatcher(ServerContext &serverCtx)
 }
 
 CommandDispatcher::~CommandDispatcher() {
-  for (std::map<std::string, ACommand *>::iterator it = _commands.begin();
+  for (std::map<std::string, ACommand*>::iterator it = _commands.begin();
        it != _commands.end(); ++it) {
     delete it->second;
   }
 }
 
 bool CommandDispatcher::_isPreRegistrationCommand(
-    const std::string &command) const {
+    const std::string& command) const {
   return command == "PASS" || command == "NICK" || command == "USER" ||
          command == "QUIT" || command == "CAP";
 }
 
-bool CommandDispatcher::dispatch(CommandContext &ctx) {
+bool CommandDispatcher::dispatch(CommandContext& ctx) {
   if (!ctx.isRegistered() && !_isPreRegistrationCommand(ctx.command())) {
     ctx.reply(ReplyBuilder::errNotRegistered());
     return true;
   }
 
-  std::map<std::string, ACommand *>::iterator it =
-      _commands.find(ctx.command());
+  std::map<std::string, ACommand*>::iterator it = _commands.find(ctx.command());
   if (it == _commands.end()) {
     if (ctx.isRegistered()) {
       ctx.reply(ReplyBuilder::errUnknownCommand(ctx.nick(), ctx.command()));
-      std::cout << "Unknown command from authenticated User: "
-                << ctx.command() << std::endl; // [TODO] この出力いらないなら消す
+      std::cout << "Unknown command from authenticated User: " << ctx.command()
+                << std::endl;  // [TODO] この出力いらないなら消す
     }
     return true;
   }

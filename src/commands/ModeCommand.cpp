@@ -4,7 +4,7 @@
 #include "ReplyBuilder.hpp"
 
 namespace {
-bool parsePositiveSize(const std::string &value, size_t &result) {
+bool parsePositiveSize(const std::string& value, size_t& result) {
   if (value.empty())
     return false;
 
@@ -22,9 +22,9 @@ bool parsePositiveSize(const std::string &value, size_t &result) {
   }
   return result > 0;
 }
-} // namespace
+}  // namespace
 
-ModeCommand::ModeCommand(ServerContext &serverCtx) : _serverCtx(serverCtx) {}
+ModeCommand::ModeCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 ModeCommand::~ModeCommand() {}
 
 namespace {
@@ -60,8 +60,8 @@ bool isSelfUnsettable(char c) {
 
 }  // namespace
 
-bool ModeCommand::_executeUserMode(CommandContext &ctx,
-                                   const std::string &target) {
+bool ModeCommand::_executeUserMode(CommandContext& ctx,
+                                   const std::string& target) {
   if (!IrcCaseMapping::equals(target, ctx.nick())) {
     ctx.reply(ReplyBuilder::errUsersDontMatch(ctx.nick()));
     return true;
@@ -73,7 +73,7 @@ bool ModeCommand::_executeUserMode(CommandContext &ctx,
     return true;
   }
 
-  const std::string &mode = ctx.params()[1];
+  const std::string& mode = ctx.params()[1];
   bool adding = true;
   bool sawUnknown = false;
 
@@ -111,7 +111,7 @@ bool ModeCommand::_executeUserMode(CommandContext &ctx,
   return true;
 }
 
-bool ModeCommand::execute(CommandContext &ctx) {
+bool ModeCommand::execute(CommandContext& ctx) {
   if (ctx.params().empty()) {
     ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
     return true;
@@ -122,7 +122,7 @@ bool ModeCommand::execute(CommandContext &ctx) {
   if (chName.empty() || !Channel::isChannelPrefix(chName[0]))
     return _executeUserMode(ctx, chName);
 
-  Channel *channel = _serverCtx.findChannel(chName);
+  Channel* channel = _serverCtx.findChannel(chName);
   if (channel == NULL) {
     ctx.reply(ReplyBuilder::errNoSuchChannel(ctx.nick(), chName));
     return true;
@@ -151,7 +151,8 @@ bool ModeCommand::execute(CommandContext &ctx) {
       params += oss.str();
     }
 
-    ctx.reply(ReplyBuilder::rplChannelModeIs(ctx.nick(), chName, modes, params));
+    ctx.reply(
+        ReplyBuilder::rplChannelModeIs(ctx.nick(), chName, modes, params));
     return true;
   }
 
@@ -214,7 +215,7 @@ bool ModeCommand::execute(CommandContext &ctx) {
         break;
       }
       std::string targetNick = ctx.params()[paramIndex++];
-      Client *targetClient = _serverCtx.findClientByNick(targetNick);
+      Client* targetClient = _serverCtx.findClientByNick(targetNick);
       if (targetClient == NULL) {
         ctx.reply(ReplyBuilder::errNoSuchNick(ctx.nick(), targetNick));
         break;
@@ -264,9 +265,8 @@ bool ModeCommand::execute(CommandContext &ctx) {
   }
 
   if (!appliedMode.empty()) {
-    ctx.broadcast(*channel,
-                  ":" + ctx.prefix() + " MODE " + chName + " " + appliedMode +
-                      modeParams);
+    ctx.broadcast(*channel, ":" + ctx.prefix() + " MODE " + chName + " " +
+                                appliedMode + modeParams);
   }
   return true;
 }

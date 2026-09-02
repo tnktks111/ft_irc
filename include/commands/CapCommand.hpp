@@ -6,16 +6,16 @@
 
 class CapCommand : public ACommand {
  private:
-  ServerContext &_serverCtx;
+  ServerContext& _serverCtx;
 
-  CapCommand(const CapCommand &other);
-  CapCommand &operator=(const CapCommand &other);
+  CapCommand(const CapCommand& other);
+  CapCommand& operator=(const CapCommand& other);
 
  public:
-  CapCommand(ServerContext &serverCtx);
+  CapCommand(ServerContext& serverCtx);
   virtual ~CapCommand();
 
-  virtual bool execute(CommandContext &ctx);
+  virtual bool execute(CommandContext& ctx);
 };
 
 #endif
