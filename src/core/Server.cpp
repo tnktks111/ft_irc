@@ -157,18 +157,25 @@ bool Server::_waitForEvents() {
 
 void Server::_processActiveConnections() {
   for (size_t i = 0; i < _pollFds.size(); ++i) {
-    if (_pollFds[i].revents == 0)
+    short revents = _pollFds[i].revents;
+    bool receivedData = false;
+
+    if (revents == 0)
       continue;
-    if (_pollFds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-      _processPollError(i);
-      continue;
-    }
-    if (_pollFds[i].revents & POLLIN) {
+
+    if (revents & POLL_IN) {
       if (_processReadableEvent(i) == CONTINUE_LOOP)
         continue;
+      receivedData = true;
     }
+
     if (_pollFds[i].revents & POLLOUT) {
       _flushSendBuffer(i);
+    }
+
+    if ((revents & (POLLERR | POLLHUP | POLLNVAL)) && !receivedData) {
+      _processPollError(i);
+      continue;
     }
   }
 }
