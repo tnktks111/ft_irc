@@ -166,6 +166,7 @@ void ServerContext::leaveAllChannels(Client& client) {
   for (std::map<std::string, Channel*>::iterator it = _channels.begin();
        it != _channels.end(); ++it) {
     Channel* channel = it->second;
+    channel->removeInvite(client);
     if (channel->hasMember(client)) {
       std::string partMsg =
           ":" + client.getPrefix() + " PART " + channel->getName();
