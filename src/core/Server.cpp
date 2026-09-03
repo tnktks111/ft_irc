@@ -169,7 +169,6 @@ void Server::_processActiveConnections() {
       }
       if (revents & POLLIN)
         _acceptNewConnection();
-      continue;
     } else {
       bool receivedData = false;
 
@@ -185,7 +184,6 @@ void Server::_processActiveConnections() {
 
       if ((revents & (POLLERR | POLLHUP | POLLNVAL)) && !receivedData) {
         _processPollError(i);
-        continue;
       }
     }
   }
