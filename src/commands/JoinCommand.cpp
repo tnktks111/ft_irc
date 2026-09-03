@@ -69,7 +69,7 @@ bool JoinCommand::execute(CommandContext& ctx) {
     if (isNewChannel) {
       std::cout << "[+] Channel created: " << chName << std::endl;
     } else {
-      if (channel->isInviteOnly() && !channel->isInvited(ctx.nick())) {
+      if (channel->isInviteOnly() && !channel->isInvited(ctx.client())) {
         ctx.reply(ReplyBuilder::errInviteOnlyChan(ctx.nick(), chName));
         continue;
       }
@@ -92,7 +92,7 @@ bool JoinCommand::execute(CommandContext& ctx) {
                   << chName << std::endl;
       }
 
-      channel->removeInvite(ctx.nick());
+      channel->removeInvite(ctx.client());
 
       ctx.broadcast(*channel, ":" + ctx.prefix() + " JOIN :" + chName);
 

@@ -38,7 +38,7 @@ bool InviteCommand::execute(CommandContext& ctx) {
     return true;
   }
 
-  channel->addInvite(targetClient->getNickName());
+  channel->addInvite(*targetClient);
   ctx.reply(ReplyBuilder::rplInviting(ctx.nick(), chName, targetNick));
   ctx.direct(*targetClient,
              ":" + ctx.prefix() + " INVITE " + targetNick + " :" + chName);

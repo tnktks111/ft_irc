@@ -2,6 +2,7 @@
 #define CHANNEL_HPP
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include "Client.hpp"
@@ -13,7 +14,7 @@ class Channel {
 
   std::map<int, Client*> _members;
   std::vector<int> _operators;
-  std::vector<std::string> _invitedUserNicks;
+  std::set<int> _invitedClientFds;
 
   // channel mode flags
   bool _inviteOnly;       // +i
@@ -67,9 +68,9 @@ class Channel {
   bool isOperator(const Client& client) const;
   bool isOperator(int fd) const;
 
-  void addInvite(const std::string& nickName);
-  bool isInvited(const std::string& nickName) const;
-  void removeInvite(const std::string& nickName);
+  void addInvite(const Client& client);
+  bool isInvited(const Client& client) const;
+  void removeInvite(const Client& client);
 };
 
 #endif
