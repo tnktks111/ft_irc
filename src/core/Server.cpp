@@ -158,24 +158,35 @@ bool Server::_waitForEvents() {
 void Server::_processActiveConnections() {
   for (size_t i = 0; i < _pollFds.size(); ++i) {
     short revents = _pollFds[i].revents;
-    bool receivedData = false;
 
     if (revents == 0)
       continue;
 
-    if (revents & POLL_IN) {
-      if (_processReadableEvent(i) == CONTINUE_LOOP)
+    if (_pollFds[i].fd == _serverFd) {
+      if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
+        _processPollError(i);
         continue;
-      receivedData = true;
-    }
-
-    if (_pollFds[i].revents & POLLOUT) {
-      _flushSendBuffer(i);
-    }
-
-    if ((revents & (POLLERR | POLLHUP | POLLNVAL)) && !receivedData) {
-      _processPollError(i);
+      }
+      if (revents & POLLIN)
+        _acceptNewConnection();
       continue;
+    } else {
+      bool receivedData = false;
+
+      if (revents & POLLIN) {
+        if (_processReadableEvent(i) == CONTINUE_LOOP)
+          continue;
+        receivedData = true;
+      }
+
+      if (_pollFds[i].revents & POLLOUT) {
+        _flushSendBuffer(i);
+      }
+
+      if ((revents & (POLLERR | POLLHUP | POLLNVAL)) && !receivedData) {
+        _processPollError(i);
+        continue;
+      }
     }
   }
 }
