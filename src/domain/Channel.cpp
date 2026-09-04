@@ -6,7 +6,7 @@ namespace {
 
 const std::size_t MAX_CHANNEL_NAME_LEN = 50;
 
-}
+} // namespace
 
 Channel::Channel(const std::string& name)
     : _name(name),
