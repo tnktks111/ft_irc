@@ -147,25 +147,15 @@ bool Channel::isOperator(int fd) const {
          _operators.end();
 }
 
-void Channel::addInvite(const std::string& nickName) {
-  if (!isInvited(nickName)) {
-    _invitedUserNicks.push_back(IrcCaseMapping::normalize(nickName));
-  }
+void Channel::addInvite(const Client& client) {
+  _invitedClientFds.insert(client.getFd());
 }
 
-bool Channel::isInvited(const std::string& nickName) const {
-  std::string normalizedNick = IrcCaseMapping::normalize(nickName);
-  return std::find(_invitedUserNicks.begin(), _invitedUserNicks.end(),
-                   normalizedNick) != _invitedUserNicks.end();
+bool Channel::isInvited(const Client& client) const {
+  return _invitedClientFds.find(client.getFd()) !=
+         _invitedClientFds.end();
 }
 
-void Channel::removeInvite(const std::string& nickName) {
-  std::string normalizedNick = IrcCaseMapping::normalize(nickName);
-
-  std::vector<std::string>::iterator it = std::find(
-      _invitedUserNicks.begin(), _invitedUserNicks.end(), normalizedNick);
-
-  if (it != _invitedUserNicks.end()) {
-    _invitedUserNicks.erase(it);
-  }
+void Channel::removeInvite(const Client& client) {
+  _invitedClientFds.erase(client.getFd());
 }

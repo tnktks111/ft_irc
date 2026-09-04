@@ -191,6 +191,7 @@ void ServerContext::removeClientFromAllChannels(Client& client,
   for (std::map<std::string, Channel*>::iterator it = _channels.begin();
        it != _channels.end(); ++it) {
     Channel* channel = it->second;
+    channel->removeInvite(client);
     if (channel->hasMember(client)) {
       _responseSink.broadcastExcept(*channel, quitMsg, client);
       channel->removeMember(client);
