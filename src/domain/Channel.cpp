@@ -2,6 +2,12 @@
 #include <algorithm>
 #include "IrcCaseMapping.hpp"
 
+namespace {
+
+const std::size_t MAX_CHANNEL_NAME_LEN = 50;
+
+} // namespace
+
 Channel::Channel(const std::string& name)
     : _name(name),
       _topic(""),
@@ -26,7 +32,7 @@ bool Channel::_isValidChannelNameChar(char c) {
 
 // we don't support ':', because we must not handle multiple servers.
 bool Channel::isValidChannelName(const std::string& name) {
-  if (name.empty() || name.length() > 50)
+  if (name.length() < 2 || name.length() > MAX_CHANNEL_NAME_LEN)
     return false;
   if (isChannelPrefix(*name.begin()) == false)
     return false;
