@@ -69,6 +69,9 @@ bool JoinCommand::execute(CommandContext& ctx) {
     if (isNewChannel) {
       std::cout << "[+] Channel created: " << chName << std::endl;
     } else {
+      if (channel->hasMember(ctx.client()))
+        continue;
+
       if (channel->isInviteOnly() && !channel->isInvited(ctx.client())) {
         ctx.reply(ReplyBuilder::errInviteOnlyChan(ctx.nick(), chName));
         continue;
@@ -83,33 +86,31 @@ bool JoinCommand::execute(CommandContext& ctx) {
         continue;
       }
     }
-    if (!channel->hasMember(ctx.client())) {
-      channel->addMember(ctx.client());
+    channel->addMember(ctx.client());
 
-      if (isNewChannel) {
-        channel->addOperator(ctx.client());
-        std::cout << "[*] " << ctx.nick() << " is now the operator of "
-                  << chName << std::endl;
-      }
-
-      channel->removeInvite(ctx.client());
-
-      ctx.broadcast(*channel, ":" + ctx.prefix() + " JOIN :" + chName);
-
-      if (channel->getTopic().empty())
-        ctx.reply(ReplyBuilder::rplNoTopic(ctx.nick(), chName));
-      else
-        ctx.reply(
-            ReplyBuilder::rplTopic(ctx.nick(), chName, channel->getTopic()));
-
-      const std::size_t MAX_NAMES_CHUNK_LEN = 400;
-      std::vector<std::string> chunks =
-          _generateChannelMemberChunks(*channel, MAX_NAMES_CHUNK_LEN);
-      for (std::size_t i = 0; i < chunks.size(); ++i) {
-        ctx.reply(ReplyBuilder::rplNamReply(ctx.nick(), chName, chunks[i]));
-      }
-      ctx.reply(ReplyBuilder::rplEndOfNames(ctx.nick(), chName));
+    if (isNewChannel) {
+      channel->addOperator(ctx.client());
+      std::cout << "[*] " << ctx.nick() << " is now the operator of " << chName
+                << std::endl;
     }
+
+    channel->removeInvite(ctx.client());
+
+    ctx.broadcast(*channel, ":" + ctx.prefix() + " JOIN :" + chName);
+
+    if (channel->getTopic().empty())
+      ctx.reply(ReplyBuilder::rplNoTopic(ctx.nick(), chName));
+    else
+      ctx.reply(
+          ReplyBuilder::rplTopic(ctx.nick(), chName, channel->getTopic()));
+
+    const std::size_t MAX_NAMES_CHUNK_LEN = 400;
+    std::vector<std::string> chunks =
+        _generateChannelMemberChunks(*channel, MAX_NAMES_CHUNK_LEN);
+    for (std::size_t i = 0; i < chunks.size(); ++i) {
+      ctx.reply(ReplyBuilder::rplNamReply(ctx.nick(), chName, chunks[i]));
+    }
+    ctx.reply(ReplyBuilder::rplEndOfNames(ctx.nick(), chName));
   }
   return true;
 }
