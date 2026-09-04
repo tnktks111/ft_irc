@@ -304,23 +304,40 @@ bool Server::_executeCommand(Client* client, const Message& msg) {
 }
 
 void Server::_registerClient(int clientFd, const std::string& host) {
-  struct pollfd clientPollFd;
-  clientPollFd.fd = clientFd;
-  clientPollFd.events = POLLIN;
-  clientPollFd.revents = 0;
-  _pollFds.push_back(clientPollFd);
+  Client* client = NULL;
+  bool inserted = false;
 
-  _clients.insert(std::make_pair(clientFd, new Client(clientFd, host)));
+  try {
+    client = new Client(clientFd, host);
+
+    std::pair<std::map<int, Client*>::iterator, bool> result =
+        _clients.insert(std::make_pair(clientFd, client));
+
+    if (!result.second) {
+      delete client;
+      return;
+    }
+    inserted = true;
+
+    struct pollfd clientPollFd;
+    clientPollFd.fd = clientFd;
+    clientPollFd.events = POLLIN;
+    clientPollFd.revents = 0;
+
+    _pollFds.push_back(clientPollFd);
+  } catch (const std::bad_alloc&) {
+    if (inserted)
+      _clients.erase(clientFd);
+
+    if (client != NULL)
+      delete client;
+    else
+      close(clientFd);
+
+    return;
+  }
+
   std::cout << "[+] A new client has connected. Fd: " << clientFd << std::endl;
-}
-
-void Server::_disconnectClient(size_t& index, const std::string& quitMsg) {
-  int fd = _pollFds[index].fd;
-  _serverCtx.removeClientFromAllChannels(*_clients[fd], quitMsg);
-  delete _clients[fd];
-  _clients.erase(fd);
-  _pollFds.erase(_pollFds.begin() + index);
-  --index;
 }
 
 void Server::_disconnectSendQueueExceededClients() {
