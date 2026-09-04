@@ -16,6 +16,9 @@ MsgTargetResolution MsgTargetResolver::resolve(
 
   std::vector<std::string> tokens = _splitTargets(rawTargets);
 
+  std::set<int> seenClientFds;
+  std::set<Channel*> seenChannels;
+
   for (std::vector<std::string>::iterator it = tokens.begin();
        it != tokens.end(); ++it) {
 
@@ -27,6 +30,19 @@ MsgTargetResolution MsgTargetResolver::resolve(
     MsgTargetEntry entry;
     entry.raw = token;
     entry.result = _resolveOne(token, entry.target);
+
+    if (entry.result == MSGTARGET_RESOLVE_OK) {
+      if (entry.target.kind == MSGTARGET_CLIENT) {
+        if (!seenClientFds.insert(entry.target.client->getFd()).second)
+          continue;
+      }
+
+      if (entry.target.kind == MSGTARGET_CHANNEL) {
+        if (!seenChannels.insert(entry.target.channel).second)
+          continue;
+      }
+    }
+
     result.entries.push_back(entry);
   }
   return result;
