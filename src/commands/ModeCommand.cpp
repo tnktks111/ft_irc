@@ -194,20 +194,24 @@ bool ModeCommand::execute(CommandContext& ctx) {
       channel->setTopicProtected(adding);
       applied = true;
     } else if (flag == 'k') {
+      if (ctx.params().size() <= paramIndex) {
+        ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
+        break;
+      }
+
+      const std::string key = ctx.params()[paramIndex++];
+
       if (adding) {
-        if (ctx.params().size() <= paramIndex) {
-          ctx.reply(ReplyBuilder::errNeedMoreParams(ctx.nick(), "MODE"));
-          break;
-        }
         if (!channel->getPassword().empty()) {
           ctx.reply(ReplyBuilder::errKeySet(ctx.nick(), chName));
           break;
         }
-        channel->setPassword(ctx.params()[paramIndex]);
-        modeParams += " " + ctx.params()[paramIndex++];
+        channel->setPassword(key);
       } else {
         channel->setPassword("");
       }
+
+      modeParams += " " + key;
       applied = true;
     } else if (flag == 'o') {
       if (ctx.params().size() <= paramIndex) {
