@@ -26,7 +26,7 @@ bool Channel::_isValidChannelNameChar(char c) {
 
 // we don't support ':', because we must not handle multiple servers.
 bool Channel::isValidChannelName(const std::string& name) {
-  if (name.empty() || name.length() > 50)
+  if (name.length() < 2 || name.length() > 50)
     return false;
   if (isChannelPrefix(*name.begin()) == false)
     return false;
