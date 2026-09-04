@@ -41,8 +41,11 @@ ServerContext::~ServerContext() {}
 Client* ServerContext::findClientByNick(const std::string& nick) const {
   for (std::map<int, Client*>::const_iterator it = _clients.begin();
        it != _clients.end(); ++it) {
-    if (IrcCaseMapping::equals(it->second->getNickName(), nick))
-      return it->second;
+    Client* client = it->second;
+
+    if (client->isRegistered() &&
+        IrcCaseMapping::equals(client->getNickName(), nick))
+      return client;
   }
   return NULL;
 }
@@ -53,8 +56,10 @@ std::vector<Client*> ServerContext::findClientsByUserName(
 
   for (std::map<int, Client*>::const_iterator it = _clients.begin();
        it != _clients.end(); ++it) {
-    if (it->second->getUserName() == userName)
-      result.push_back(it->second);
+    Client* client = it->second;
+
+    if (client->isRegistered() && client->getUserName() == userName)
+      result.push_back(client);
   }
   return result;
 }
@@ -65,9 +70,11 @@ std::vector<Client*> ServerContext::findClientsByUserHost(
 
   for (std::map<int, Client*>::const_iterator it = _clients.begin();
        it != _clients.end(); ++it) {
-    if (it->second->getUserName() == userName &&
-        HostCaseMapping::equals(it->second->getHost(), host))
-      result.push_back(it->second);
+    Client* client = it->second;
+
+    if (client->isRegistered() && client->getUserName() == userName &&
+        HostCaseMapping::equals(client->getHost(), host))
+      result.push_back(client);
   }
   return result;
 }
@@ -78,10 +85,13 @@ Client* ServerContext::findClientByNickMask(const std::string& nick,
 
   for (std::map<int, Client*>::const_iterator it = _clients.begin();
        it != _clients.end(); ++it) {
-    if (IrcCaseMapping::equals(it->second->getNickName(), nick) &&
-        it->second->getUserName() == userName &&
-        HostCaseMapping::equals(it->second->getHost(), host))
-      return it->second;
+    Client* client = it->second;
+
+    if (client->isRegistered() &&
+        IrcCaseMapping::equals(client->getNickName(), nick) &&
+        client->getUserName() == userName &&
+        HostCaseMapping::equals(client->getHost(), host))
+      return client;
   }
   return NULL;
 }
