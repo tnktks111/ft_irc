@@ -59,7 +59,7 @@ std::vector<Client*> ServerContext::findClientsByUserName(
     Client* client = it->second;
 
     if (client->isRegistered() && client->getUserName() == userName)
-      result.push_back(it->second);
+      result.push_back(client);
   }
   return result;
 }
@@ -74,7 +74,7 @@ std::vector<Client*> ServerContext::findClientsByUserHost(
 
     if (client->isRegistered() && client->getUserName() == userName &&
         HostCaseMapping::equals(client->getHost(), host))
-      result.push_back(it->second);
+      result.push_back(client);
   }
   return result;
 }
