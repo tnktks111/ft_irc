@@ -187,18 +187,33 @@ void ServerContext::leaveAllChannels(Client& client) {
 void ServerContext::removeClientFromAllChannels(Client& client,
                                                 const std::string& quitMsg) {
   std::vector<std::string> emptyChannels;
+  std::set<int> notified;
 
   for (std::map<std::string, Channel*>::iterator it = _channels.begin();
        it != _channels.end(); ++it) {
     Channel* channel = it->second;
-    channel->removeInvite(client);
-    if (channel->hasMember(client)) {
-      _responseSink.broadcastExcept(*channel, quitMsg, client);
-      channel->removeMember(client);
 
-      if (channel->getMemberCount() == 0)
-        emptyChannels.push_back(channel->getName());
+    channel->removeInvite(client);
+
+    if (!channel->hasMember(client))
+      continue;
+
+    const std::map<int, Client*>& members = channel->getMembers();
+
+    for (std::map<int, Client*>::const_iterator member = members.begin();
+         member != members.end(); ++member) {
+      const int targetFd = member->first;
+
+      if (targetFd == client.getFd())
+        continue;
+
+      if (notified.insert(targetFd).second) {
+        _responseSink.direct(*member->second, quitMsg);
+      }
     }
+    channel->removeMember(client);
+    if (channel->getMemberCount() == 0)
+      emptyChannels.push_back(channel->getName());
   }
 
   for (std::vector<std::string>::iterator it = emptyChannels.begin();

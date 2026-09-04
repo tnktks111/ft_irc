@@ -152,8 +152,7 @@ void Channel::addInvite(const Client& client) {
 }
 
 bool Channel::isInvited(const Client& client) const {
-  return _invitedClientFds.find(client.getFd()) !=
-         _invitedClientFds.end();
+  return _invitedClientFds.find(client.getFd()) != _invitedClientFds.end();
 }
 
 void Channel::removeInvite(const Client& client) {
