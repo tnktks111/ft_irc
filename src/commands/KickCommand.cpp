@@ -39,8 +39,7 @@ bool KickCommand::execute(CommandContext& ctx) {
     if (chName.empty() || targetNick.empty())
       continue;
 
-    // reason 未指定なら各 user 名をそのまま comment に使う (元実装の挙動)
-    const std::string& comment = hasReason ? reason : targetNick;
+    const std::string& comment = hasReason ? reason : ctx.nick();
 
     Channel* channel = _serverCtx.findChannel(chName);
     if (channel == NULL) {
