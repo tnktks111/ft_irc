@@ -6,20 +6,22 @@ NickCommand::NickCommand(ServerContext& serverCtx) : _serverCtx(serverCtx) {}
 NickCommand::~NickCommand() {}
 
 bool NickCommand::execute(CommandContext& ctx) {
+  const std::string clientName = ctx.nick().empty() ? "*" : ctx.nick();
+
   if (ctx.params().empty()) {
-    ctx.reply(ReplyBuilder::errNoNicknameGiven());
+    ctx.reply(ReplyBuilder::errNoNicknameGiven(clientName));
     return true;
   }
 
   std::string newNick = ctx.params()[0];
 
   if (Client::isValidNickName(newNick) == false) {
-    ctx.reply(ReplyBuilder::erroneusNickName(newNick));
+    ctx.reply(ReplyBuilder::erroneusNickName(clientName, newNick));
     return true;
   }
 
   if (_serverCtx.hasNick(newNick, ctx.client())) {
-    ctx.reply(ReplyBuilder::errNickNameInUse(newNick));
+    ctx.reply(ReplyBuilder::errNickNameInUse(clientName, newNick));
     return true;
   }
 
