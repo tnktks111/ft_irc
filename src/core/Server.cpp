@@ -366,7 +366,7 @@ void Server::_disconnectClient(size_t& index, const std::string& quitMsg) {
   if (it == _clients.end())
     return;
 
-  _serverCtx.removeClientFromAllChannels(*_clients[fd], quitMsg);
+  _serverCtx.removeClientFromAllChannels(*it->second, quitMsg);
   _eraseClient(index, it);
 }
 
