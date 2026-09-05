@@ -182,7 +182,7 @@ bool Client::isPassChecked() const {
 bool Client::isRegistered() const {
   return _isRegistered;
 }
-bool Client::isCapNegotiating() const{
+bool Client::isCapNegotiating() const {
   return _isCapNegotiating;
 }
 
@@ -226,7 +226,7 @@ void Client::setPassChecked(bool status) {
 void Client::setRegistered(bool status) {
   _isRegistered = status;
 }
-void Client::setCapNegotiating(bool status){
+void Client::setCapNegotiating(bool status) {
   _isCapNegotiating = status;
 }
 
