@@ -172,25 +172,24 @@ void Server::_processActiveConnections() {
       if (revents & POLLIN)
         _acceptNewConnection();
     } else {
-      bool receivedData = false;
-
-      if (revents & POLLIN) {
-        try {
+      try {
+        bool receivedData = false;
+        if (revents & POLLIN) {
           if (_processReadableEvent(i) == CONTINUE_LOOP)
             continue;
           receivedData = true;
-        } catch (const std::bad_alloc&) {
-          _disconnectClientWithoutNotification(i);
-          continue;
         }
-      }
 
-      if (_pollFds[i].revents & POLLOUT) {
-        _flushSendBuffer(i);
-      }
+        if (_pollFds[i].revents & POLLOUT) {
+          _flushSendBuffer(i);
+        }
 
-      if ((revents & (POLLERR | POLLHUP | POLLNVAL)) && !receivedData) {
-        _processPollError(i);
+        if ((revents & (POLLERR | POLLHUP | POLLNVAL)) && !receivedData) {
+          _processPollError(i);
+        }
+      } catch (const std::bad_alloc&) {
+        _disconnectClientWithoutNotification(i);
+        continue;
       }
     }
   }
@@ -384,10 +383,12 @@ void Server::_disconnectSendQueueExceededClients() {
     }
 
     Client* client = it->second;
-    std::string quitMsg = _makeQuitMessage(*client, "Max SendQ exceeded");
-
-    _disconnectClient(index, quitMsg);
-
+    try {
+      std::string quitMsg = _makeQuitMessage(*client, "Max SendQ exceeded");
+      _disconnectClient(index, quitMsg);
+    } catch (const std::bad_alloc&) {
+      _disconnectClientWithoutNotification(index);
+    }
     index = 1;
   }
 }
