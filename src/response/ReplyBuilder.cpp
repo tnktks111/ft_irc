@@ -100,6 +100,12 @@ std::string ReplyBuilder::errCantSendToChannel(const std::string& clientName,
   return "404 " + clientName + " " + channelName + " :Cannot send to channel";
 }
 
+std::string ReplyBuilder::errTooManyChannels(const std::string& clientName,
+                                             const std::string& channelName) {
+  return "405 " + clientName + " " + channelName +
+         " :You have joined too many channels";
+}
+
 std::string ReplyBuilder::errNoRecipient(const std::string& clientName,
                                          const std::string& command) {
   return "411 " + clientName + " :No recipient given (" + command + ")";

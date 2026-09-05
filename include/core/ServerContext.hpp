@@ -40,6 +40,7 @@ class ServerContext {
   bool hasNick(const std::string& nick, int exceptFd) const;
 
   Channel* findChannel(const std::string& name) const;
+  std::size_t countJoinedChannels(const Client& client) const;
   ChannelSlot getOrCreateChannel(const std::string& name);
   void removeChannel(const std::string& name);
   bool tryCompleteRegistration(Client& client);

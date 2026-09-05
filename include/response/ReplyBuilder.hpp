@@ -62,6 +62,8 @@ class ReplyBuilder {
   static std::string errNickNameInUse(const std::string& nickName);
   static std::string errCantSendToChannel(const std::string& clientName,
                                           const std::string& channelName);
+  static std::string errTooManyChannels(const std::string& clientName,
+                                        const std::string& channelName);
   static std::string errNeedMoreParams(const std::string& clientName,
                                        const std::string& command);
   static std::string errUserNotInChannel(const std::string& clientName,

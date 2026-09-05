@@ -13,6 +13,7 @@
 #include <sstream>
 #include <stdexcept>
 #include "CommandContext.hpp"
+#include "IrcLimits.hpp"
 #include "Message.hpp"
 
 volatile sig_atomic_t Server::_shouldStop = 0;
@@ -252,6 +253,11 @@ void Server::_acceptNewConnection() {
   if (clientFd == -1) {
     // Transient failure (or fd exhaustion): keep serving and let the next
     // POLLIN retry. The subject forbids errno-driven branching after I/O.
+    return;
+  }
+
+  if (_clients.size() >= IrcLimits::MAX_CLIENTS) {
+    close(clientFd);
     return;
   }
 

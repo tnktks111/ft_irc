@@ -120,6 +120,17 @@ Channel* ServerContext::findChannel(const std::string& name) const {
   return NULL;
 }
 
+std::size_t ServerContext::countJoinedChannels(const Client& client) const {
+  std::size_t count = 0;
+
+  for (std::map<std::string, Channel*>::const_iterator it = _channels.begin();
+       it != _channels.end(); ++it) {
+    if (it->second->hasMember(client))
+      ++count;
+  }
+  return count;
+}
+
 ServerContext::ChannelSlot ServerContext::getOrCreateChannel(
     const std::string& name) {
   std::string normalizedName = IrcCaseMapping::normalize(name);
