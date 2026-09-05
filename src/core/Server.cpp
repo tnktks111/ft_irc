@@ -173,9 +173,14 @@ void Server::_processActiveConnections() {
       bool receivedData = false;
 
       if (revents & POLLIN) {
-        if (_processReadableEvent(i) == CONTINUE_LOOP)
+        try {
+          if (_processReadableEvent(i) == CONTINUE_LOOP)
+            continue;
+          receivedData = true;
+        } catch (const std::bad_alloc&) {
+          _disconnectClientWithoutNotification(i);
           continue;
-        receivedData = true;
+        }
       }
 
       if (_pollFds[i].revents & POLLOUT) {
@@ -338,6 +343,19 @@ void Server::_registerClient(int clientFd, const std::string& host) {
   }
 
   std::cout << "[+] A new client has connected. Fd: " << clientFd << std::endl;
+}
+
+void Server::_disconnectClient(size_t& index,
+                               const std::string& quitMsg) {
+  int fd = _pollFds[index].fd;
+
+  _serverCtx.removeClientFromAllChannels(*_clients[fd], quitMsg);
+
+  delete _clients[fd];
+  _clients.erase(fd);
+
+  _pollFds.erase(_pollFds.begin() + index);
+  --index;
 }
 
 void Server::_disconnectSendQueueExceededClients() {
