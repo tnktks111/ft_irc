@@ -164,6 +164,9 @@ bool ServerContext::tryCompleteRegistration(Client& client) {
   if (client.isRegistered())
     return false;
 
+  if (client.isCapNegotiating())
+    return false;
+
   if (client.isPassChecked() && !client.getNickName().empty() &&
       !client.getUserName().empty()) {
     client.setRegistered(true);
