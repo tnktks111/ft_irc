@@ -119,16 +119,18 @@ std::string ReplyBuilder::errNoTextToSend(const std::string& clientName) {
   return "412 " + clientName + " :No text to send";
 }
 
-std::string ReplyBuilder::errNoNicknameGiven() {
-  return "431 * :No nickname given";
+std::string ReplyBuilder::errNoNicknameGiven(const std::string& clientName) {
+  return "431 " + clientName + " :No nickname given";
 }
 
-std::string ReplyBuilder::erroneusNickName(const std::string& nickName) {
-  return "432 * " + nickName + " :Erroneous nickname";
+std::string ReplyBuilder::erroneusNickName(const std::string& clientName,
+                                           const std::string& nickName) {
+  return "432 " + clientName + " " + nickName + " :Erroneous nickname";
 }
 
-std::string ReplyBuilder::errNickNameInUse(const std::string& nickName) {
-  return "433 * " + nickName + " :Nickname is already in use";
+std::string ReplyBuilder::errNickNameInUse(const std::string& clientName,
+                                           const std::string& nickName) {
+  return "433 " + clientName + " " + nickName + " :Nickname is already in use";
 }
 
 std::string ReplyBuilder::errUserNotInChannel(const std::string& clientName,

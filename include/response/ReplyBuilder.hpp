@@ -57,9 +57,11 @@ class ReplyBuilder {
                                     const std::string& command);
   static std::string errNoOrigin(const std::string& clientName);
   static std::string errNoTextToSend(const std::string& clientName);
-  static std::string errNoNicknameGiven();
-  static std::string erroneusNickName(const std::string& nickName);
-  static std::string errNickNameInUse(const std::string& nickName);
+  static std::string errNoNicknameGiven(const std::string& clientName);
+  static std::string erroneusNickName(const std::string& clientName,
+                                      const std::string& nickName);
+  static std::string errNickNameInUse(const std::string& clientName,
+                                      const std::string& nickName);
   static std::string errCantSendToChannel(const std::string& clientName,
                                           const std::string& channelName);
   static std::string errTooManyChannels(const std::string& clientName,
