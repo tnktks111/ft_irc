@@ -40,11 +40,13 @@ class ServerContext {
   bool hasNick(const std::string& nick, int exceptFd) const;
 
   Channel* findChannel(const std::string& name) const;
+  std::size_t countJoinedChannels(const Client& client) const;
   ChannelSlot getOrCreateChannel(const std::string& name);
   void removeChannel(const std::string& name);
   bool tryCompleteRegistration(Client& client);
   void leaveAllChannels(Client& client);
   void removeClientFromAllChannels(Client& client, const std::string& quitMsg);
+  void removeClientFromAllChannelsWithoutNotification(Client& client);
   // Deliver `msg` to `client` itself and to every other member that shares
   // at least one channel with `client`, each exactly once (deduped by fd).
   // Used by NICK/QUIT-style notifications where the same event must be

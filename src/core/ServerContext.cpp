@@ -3,6 +3,7 @@
 #include <cctype>
 #include <ctime>
 #include <iostream>
+#include <memory>
 #include <set>
 #include <vector>
 #include "HostCaseMapping.hpp"
@@ -119,17 +120,35 @@ Channel* ServerContext::findChannel(const std::string& name) const {
   return NULL;
 }
 
+std::size_t ServerContext::countJoinedChannels(const Client& client) const {
+  std::size_t count = 0;
+
+  for (std::map<std::string, Channel*>::const_iterator it = _channels.begin();
+       it != _channels.end(); ++it) {
+    if (it->second->hasMember(client))
+      ++count;
+  }
+  return count;
+}
+
 ServerContext::ChannelSlot ServerContext::getOrCreateChannel(
     const std::string& name) {
   std::string normalizedName = IrcCaseMapping::normalize(name);
   std::map<std::string, Channel*>::iterator it = _channels.find(normalizedName);
-  if (it != _channels.end()) {
+
+  if (it != _channels.end())
     return ChannelSlot(it->second, false);
-  } else {
-    Channel* newChannel = new Channel(name);
-    _channels[normalizedName] = newChannel;
-    return ChannelSlot(newChannel, true);
-  }
+
+  std::auto_ptr<Channel> channel(new Channel(name));
+
+  std::pair<std::map<std::string, Channel*>::iterator, bool> result =
+      _channels.insert(std::make_pair(normalizedName, channel.get()));
+
+  if (!result.second)
+    return ChannelSlot(result.first->second, false);
+
+  Channel* raw = channel.release();
+  return ChannelSlot(raw, true);
 }
 
 void ServerContext::removeChannel(const std::string& name) {
@@ -230,6 +249,28 @@ void ServerContext::removeClientFromAllChannels(Client& client,
        it != emptyChannels.end(); ++it) {
     removeChannel(*it);
     std::cout << "[-] Channel deleted (no member): " << *it << std::endl;
+  }
+}
+
+void ServerContext::removeClientFromAllChannelsWithoutNotification(
+    Client& client) {
+
+  for (std::map<std::string, Channel*>::iterator it = _channels.begin();
+       it != _channels.end();) {
+    Channel* channel = it->second;
+
+    channel->removeInvite(client);
+
+    if (channel->hasMember(client))
+      channel->removeMember(client);
+
+    if (channel->getMemberCount() == 0) {
+      std::map<std::string, Channel*>::iterator current = it++;
+      delete current->second;
+      _channels.erase(current);
+    } else {
+      ++it;
+    }
   }
 }
 

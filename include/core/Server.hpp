@@ -40,8 +40,10 @@ class Server {
   void _setNonBlocking(int fd);
   bool _waitForEvents();
   void _registerClient(int clientFd, const std::string& host);
+  void _eraseClient(size_t& index, std::map<int, Client*>::iterator cleanIt);
   void _disconnectClient(size_t& index, const std::string& quitMsg);
   void _disconnectSendQueueExceededClients();
+  void _disconnectClientWithoutNotification(size_t& index);
   std::string _makeQuitMessage(const Client& client,
                                const std::string& reason) const;
 

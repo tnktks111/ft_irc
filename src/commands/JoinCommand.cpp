@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "IrcLimits.hpp"
 #include "ReplyBuilder.hpp"
 #include "StringUtils.hpp"
 
@@ -62,16 +63,24 @@ bool JoinCommand::execute(CommandContext& ctx) {
       continue;
     }
 
+    Channel* channel = _serverCtx.findChannel(chName);
+
+    if (channel != NULL && channel->hasMember(ctx.client()))
+      continue;
+
+    if (_serverCtx.countJoinedChannels(ctx.client()) >=
+        IrcLimits::MAX_CHANNELS_PER_CLIENT) {
+      ctx.reply(ReplyBuilder::errTooManyChannels(ctx.nick(), chName));
+      continue;
+    }
+
     ServerContext::ChannelSlot slot = _serverCtx.getOrCreateChannel(chName);
-    Channel* channel = slot.first;
+    channel = slot.first;
     bool isNewChannel = slot.second;
 
     if (isNewChannel) {
       std::cout << "[+] Channel created: " << chName << std::endl;
     } else {
-      if (channel->hasMember(ctx.client()))
-        continue;
-
       if (channel->isInviteOnly() && !channel->isInvited(ctx.client())) {
         ctx.reply(ReplyBuilder::errInviteOnlyChan(ctx.nick(), chName));
         continue;

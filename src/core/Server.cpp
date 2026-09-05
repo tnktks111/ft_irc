@@ -9,9 +9,11 @@
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <new>
 #include <sstream>
 #include <stdexcept>
 #include "CommandContext.hpp"
+#include "IrcLimits.hpp"
 #include "Message.hpp"
 
 volatile sig_atomic_t Server::_shouldStop = 0;
@@ -170,20 +172,24 @@ void Server::_processActiveConnections() {
       if (revents & POLLIN)
         _acceptNewConnection();
     } else {
-      bool receivedData = false;
+      try {
+        bool receivedData = false;
+        if (revents & POLLIN) {
+          if (_processReadableEvent(i) == CONTINUE_LOOP)
+            continue;
+          receivedData = true;
+        }
 
-      if (revents & POLLIN) {
-        if (_processReadableEvent(i) == CONTINUE_LOOP)
-          continue;
-        receivedData = true;
-      }
+        if (_pollFds[i].revents & POLLOUT) {
+          _flushSendBuffer(i);
+        }
 
-      if (_pollFds[i].revents & POLLOUT) {
-        _flushSendBuffer(i);
-      }
-
-      if ((revents & (POLLERR | POLLHUP | POLLNVAL)) && !receivedData) {
-        _processPollError(i);
+        if ((revents & (POLLERR | POLLHUP | POLLNVAL)) && !receivedData) {
+          _processPollError(i);
+        }
+      } catch (const std::bad_alloc&) {
+        _disconnectClientWithoutNotification(i);
+        continue;
       }
     }
   }
@@ -249,6 +255,11 @@ void Server::_acceptNewConnection() {
     return;
   }
 
+  if (_clients.size() >= IrcLimits::MAX_CLIENTS) {
+    close(clientFd);
+    return;
+  }
+
   char host[INET_ADDRSTRLEN];
   if (inet_ntop(AF_INET, &clientAddr.sin_addr, host, sizeof(host)) == NULL) {
     close(clientFd);
@@ -304,23 +315,59 @@ bool Server::_executeCommand(Client* client, const Message& msg) {
 }
 
 void Server::_registerClient(int clientFd, const std::string& host) {
-  struct pollfd clientPollFd;
-  clientPollFd.fd = clientFd;
-  clientPollFd.events = POLLIN;
-  clientPollFd.revents = 0;
-  _pollFds.push_back(clientPollFd);
+  Client* client = NULL;
+  bool inserted = false;
 
-  _clients.insert(std::make_pair(clientFd, new Client(clientFd, host)));
+  try {
+    client = new Client(clientFd, host);
+
+    std::pair<std::map<int, Client*>::iterator, bool> result =
+        _clients.insert(std::make_pair(clientFd, client));
+
+    if (!result.second) {
+      delete client;
+      return;
+    }
+    inserted = true;
+
+    struct pollfd clientPollFd;
+    clientPollFd.fd = clientFd;
+    clientPollFd.events = POLLIN;
+    clientPollFd.revents = 0;
+
+    _pollFds.push_back(clientPollFd);
+  } catch (const std::bad_alloc&) {
+    if (inserted)
+      _clients.erase(clientFd);
+
+    if (client != NULL)
+      delete client;
+    else
+      close(clientFd);
+
+    return;
+  }
+
   std::cout << "[+] A new client has connected. Fd: " << clientFd << std::endl;
+}
+
+void Server::_eraseClient(size_t& index,
+                          std::map<int, Client*>::iterator cleanIt) {
+  delete cleanIt->second;
+  _clients.erase(cleanIt);
+  _pollFds.erase(_pollFds.begin() + index);
+  --index;
 }
 
 void Server::_disconnectClient(size_t& index, const std::string& quitMsg) {
   int fd = _pollFds[index].fd;
-  _serverCtx.removeClientFromAllChannels(*_clients[fd], quitMsg);
-  delete _clients[fd];
-  _clients.erase(fd);
-  _pollFds.erase(_pollFds.begin() + index);
-  --index;
+  std::map<int, Client*>::iterator it = _clients.find(fd);
+
+  if (it == _clients.end())
+    return;
+
+  _serverCtx.removeClientFromAllChannels(*it->second, quitMsg);
+  _eraseClient(index, it);
 }
 
 void Server::_disconnectSendQueueExceededClients() {
@@ -336,12 +383,25 @@ void Server::_disconnectSendQueueExceededClients() {
     }
 
     Client* client = it->second;
-    std::string quitMsg = _makeQuitMessage(*client, "Max SendQ exceeded");
-
-    _disconnectClient(index, quitMsg);
-
+    try {
+      std::string quitMsg = _makeQuitMessage(*client, "Max SendQ exceeded");
+      _disconnectClient(index, quitMsg);
+    } catch (const std::bad_alloc&) {
+      _disconnectClientWithoutNotification(index);
+    }
     index = 1;
   }
+}
+
+void Server::_disconnectClientWithoutNotification(size_t& index) {
+  int fd = _pollFds[index].fd;
+
+  std::map<int, Client*>::iterator it = _clients.find(fd);
+  if (it == _clients.end())
+    return;
+
+  _serverCtx.removeClientFromAllChannelsWithoutNotification(*it->second);
+  _eraseClient(index, it);
 }
 
 std::string Server::_makeQuitMessage(const Client& client,
