@@ -42,6 +42,7 @@ class Server {
   void _registerClient(int clientFd, const std::string& host);
   void _disconnectClient(size_t& index, const std::string& quitMsg);
   void _disconnectSendQueueExceededClients();
+  void _disconnectClientWithoutNotification(size_t& index);
   std::string _makeQuitMessage(const Client& client,
                                const std::string& reason) const;
 

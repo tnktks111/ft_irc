@@ -345,8 +345,7 @@ void Server::_registerClient(int clientFd, const std::string& host) {
   std::cout << "[+] A new client has connected. Fd: " << clientFd << std::endl;
 }
 
-void Server::_disconnectClient(size_t& index,
-                               const std::string& quitMsg) {
+void Server::_disconnectClient(size_t& index, const std::string& quitMsg) {
   int fd = _pollFds[index].fd;
 
   _serverCtx.removeClientFromAllChannels(*_clients[fd], quitMsg);
@@ -377,6 +376,17 @@ void Server::_disconnectSendQueueExceededClients() {
 
     index = 1;
   }
+}
+
+void Server::_disconnectClientWithoutNotification(size_t& index) {
+  int fd = _pollFds[index].fd;
+
+  std::map<int, Client*>::iterator it = _clients.find(fd);
+  if (it == _clients.end())
+    return;
+
+  _serverCtx.removeClientFromAllChannelsWithoutNotification(*it->second);
+  _eraseClient(index, it);
 }
 
 std::string Server::_makeQuitMessage(const Client& client,
