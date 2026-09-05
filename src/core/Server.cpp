@@ -9,6 +9,7 @@
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <new>
 #include <sstream>
 #include <stdexcept>
 #include "CommandContext.hpp"
@@ -345,20 +346,20 @@ void Server::_registerClient(int clientFd, const std::string& host) {
   std::cout << "[+] A new client has connected. Fd: " << clientFd << std::endl;
 }
 
-void Server::_eraseClient(size_t& index, std::map<int, Client*>::iterator cleanIt)
-{
+void Server::_eraseClient(size_t& index,
+                          std::map<int, Client*>::iterator cleanIt) {
   delete cleanIt->second;
   _clients.erase(cleanIt);
   _pollFds.erase(_pollFds.begin() + index);
   --index;
 }
 
-
 void Server::_disconnectClient(size_t& index, const std::string& quitMsg) {
   int fd = _pollFds[index].fd;
   std::map<int, Client*>::iterator it = _clients.find(fd);
 
-  if (it == _clients.end()) return;
+  if (it == _clients.end())
+    return;
 
   _serverCtx.removeClientFromAllChannels(*_clients[fd], quitMsg);
   _eraseClient(index, it);

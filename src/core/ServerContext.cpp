@@ -3,6 +3,7 @@
 #include <cctype>
 #include <ctime>
 #include <iostream>
+#include <memory>
 #include <set>
 #include <vector>
 #include "HostCaseMapping.hpp"
